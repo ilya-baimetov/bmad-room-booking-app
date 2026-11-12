@@ -43,3 +43,4 @@ Each person trusts the app as their only room calendar, which retires the spread
 ## Notes
 
 - Waits on epic-find-and-book because: it needs bookings with attendees, the date switcher, and the booking details panel with Change and Cancel.
+- Waits on epic-deployment because: its integrated verification runs on the deployed app; only the entry for that check waits on it.

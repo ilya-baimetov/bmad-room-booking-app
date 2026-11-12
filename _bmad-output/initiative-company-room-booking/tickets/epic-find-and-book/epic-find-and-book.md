@@ -33,6 +33,7 @@ Staff in all three offices find and book a free room in seconds with no double b
 - Not here: rooms, the current person and the shell; epic-offices-and-rooms.
 - Not here: showing bookings in a person's calendar; epic-my-calendar (initiative R7 is shared).
 - R5 here is its booking side only: refusing bookings of a closed room, the future-booking count on the close confirmation, and what happens to those bookings.
+- Replaces epic-offices-and-rooms' "Booking opens soon." landing with Rooms and adds its tab (epic-offices-and-rooms R9).
 - Owns for epic-my-calendar: the bookings data, the date switcher and the booking details panel with Change and Cancel.
 
 ## References
@@ -46,5 +47,7 @@ Staff in all three offices find and book a free room in seconds with no double b
 
 - Open question: What happens to a closed room's future bookings (PRD FR-5); settled when this epic is refined.
 - Source conflict: R6 — the initiative (user decision 2026-11-12: phone Rooms keeps "free now" as default and adds a "Later" date, time and length choice) vs EXPERIENCE.md's phone list, which starts from the next quarter-hour with 30 min, 1 h or 2 h only. R6 wins; bmad-ux can update EXPERIENCE.md at refinement.
-- Waits on epic-offices-and-rooms because: it needs the deployed app with offices, people, rooms, closed-room status, the shell, the people picker, the current person and the office-manager check.
+- Waits on epic-offices-and-rooms because: it needs the app with offices, people, rooms, closed-room status, the shell, the people picker, the current person and the office-manager check.
+- Waits on epic-deployment because: its integrated verification runs on the deployed app; only the entry for that check waits on it, so the other stories can be built first.
+- Decision: 2026-11-12, user: deployment moved from epic-offices-and-rooms to epic-deployment; this epic builds on the local app and waits on epic-deployment only for its check on the deployed app.
 - Decision: 2026-11-12, user: owns the fate of a closed room's future bookings, moved from the rooms epic because bookings exist only here.

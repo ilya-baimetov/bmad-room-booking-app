@@ -1,5 +1,5 @@
 # epic-offices-and-rooms: stories in build order. Approved by the user 2026-11-12.
-# Deployment, CI and integrated verification on the deployed app are deferred, not dropped (epic Notes).
+# Deployment, CI and integrated verification on the deployed app moved to epic-deployment, 2026-11-12 (epic Notes).
 
 [[entry]]
 id = 1
