@@ -79,10 +79,12 @@ def test_landing_sends_office_managers_to_manage_rooms(client, act):
     assert client.head("/manage-rooms").status_code == 200
 
     act("hannah")
-    page = client.get("/")
-    assert page.status_code == 200
-    assert "Booking opens soon." in page.text
-    assert 'class="tabs"' not in page.text
+    response = client.get("/")
+    assert response.status_code == 303
+    assert response.headers["location"] == "/rooms"
+    page = client.get("/rooms")
+    assert '<a class="tab" href="/rooms" aria-current="page">Rooms</a>' in page.text
+    assert ">Manage rooms</a>" not in page.text
 
 
 def test_list_and_add(client, act, add, rooms, ids, caplog):
@@ -164,7 +166,10 @@ def test_close_after_confirmation_then_reopen(client, add, rooms):
 
     page = client.get(f"/manage-rooms/{room_id}/close")
     assert "<html" in page.text
-    assert "Close Snug? No one can book it until you reopen it." in page.text
+    assert (
+        "Close Snug? No one can book it until you reopen it, "
+        "and its future bookings are cancelled."
+    ) in page.text
     assert '>Close room</button>' in page.text
     assert 'href="/manage-rooms"' in page.text and ">Keep open</a>" in page.text  # cancelling is a GET
     fragment = client.get(f"/manage-rooms/{room_id}/close", headers=HX)
@@ -276,7 +281,7 @@ def test_refused_unless_managing_the_office(client, act, add, rooms, who, method
     assert response.status_code == 403
     assert announced(response.text) == f'<p class="error-message">{REFUSED}</p>'
     if who == "hannah":
-        assert 'class="tabs"' not in response.text
+        assert ">Manage rooms</a>" not in response.text
     assert rooms() == before
 
 

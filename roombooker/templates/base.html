@@ -12,9 +12,12 @@
 <body>
   <header class="top-bar">
     <a class="app-name" href="/">Room Booking</a>
-    {% if person and can_manage_office(person, person.home_office_id) %}
+    {% if person %}
     <nav class="tabs" aria-label="Screens">
+      <a class="tab" href="/rooms"{% if request.url.path == "/rooms" %} aria-current="page"{% endif %}>Rooms</a>
+      {% if can_manage_office(person, person.home_office_id) %}
       <a class="tab" href="/manage-rooms"{% if request.url.path.startswith("/manage-rooms") %} aria-current="page"{% endif %}>Manage rooms</a>
+      {% endif %}
     </nav>
     {% endif %}
     {% if person %}

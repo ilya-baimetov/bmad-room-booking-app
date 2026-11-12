@@ -9,6 +9,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from roombooker.bookings import web as bookings_web
+from roombooker.core import time as uk
 from roombooker.core.errors import DomainError, domain_error_handler
 from roombooker.core.identity import NeedsPerson, needs_person_handler, path_with_query, pick_url
 from roombooker.people import web as people_web
@@ -35,6 +37,8 @@ def create_app() -> FastAPI:
     templates.env.globals["pick_url"] = pick_url
     templates.env.globals["path_with_query"] = path_with_query
     templates.env.globals["can_manage_office"] = can_manage_office
+    templates.env.filters["clock"] = uk.clock
+    templates.env.filters["day"] = uk.day
     app.state.templates = templates
 
     app.mount("/static", StaticFiles(directory=PACKAGE_DIR / "static"), name="static")
@@ -42,6 +46,7 @@ def create_app() -> FastAPI:
     app.add_exception_handler(DomainError, domain_error_handler)
     app.include_router(people_web.router)
     app.include_router(rooms_web.router)
+    app.include_router(bookings_web.router)
     return app
 
 

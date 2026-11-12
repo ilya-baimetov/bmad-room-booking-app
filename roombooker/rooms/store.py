@@ -27,6 +27,10 @@ def list_for_office(session: Session, office_id: int) -> Sequence[Row]:
     return session.execute(select(rooms).where(rooms.c.office_id == office_id)).all()
 
 
+def list_all(session: Session) -> Sequence[Row]:
+    return session.execute(select(rooms)).all()
+
+
 def get(session: Session, room_id: int) -> Row | None:
     return session.execute(select(rooms).where(rooms.c.id == room_id)).first()
 

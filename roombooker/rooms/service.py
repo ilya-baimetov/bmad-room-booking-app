@@ -161,6 +161,16 @@ def get_room(session: Session, actor: Person, room_id: int) -> Room:
     return _to_room(row)
 
 
+def all_rooms(session: Session) -> list[Room]:
+    """Every room in every office, open or closed: read by `bookings.service` (AD-1)."""
+    return [_to_room(row) for row in store.list_all(session)]
+
+
+def find_room(session: Session, room_id: int) -> Room:
+    """Any room, for anyone (booking needs no office-manager check); RoomNotFound if none."""
+    return _to_room(_get_row(session, room_id))
+
+
 def add_room(session: Session, actor: Person, name: str, capacity: str) -> Room:
     """Create an Open room in the actor's home office."""
     _require_manager(actor, actor.home_office_id, "add")
@@ -203,6 +213,8 @@ def _set_closed(session: Session, actor: Person, room_id: int, is_closed: bool) 
 
 
 def close_room(session: Session, actor: Person, room_id: int) -> Room:
+    """Close a room. A database trigger deletes its bookings that have not started yet
+    in the same statement (docs/decisions/adr-closing-a-room-deletes-its-future-bookings.md)."""
     return _set_closed(session, actor, room_id, is_closed=True)
 
 

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Rooms{% endblock %}
+{% block announce %}{% if notice %}<p class="notice">{{ notice }}</p>{% endif %}{% endblock %}
+{% block content %}
+<h1 class="title">Rooms</h1>
+<form class="slot-form" method="get" action="/rooms"
+      hx-get="/rooms" hx-target="#rooms-results" hx-select="#rooms-results" hx-swap="outerHTML" hx-push-url="true">
+  <div class="fields">
+    <div class="field">
+      <label class="label" for="slot-date">Date</label>
+      <input id="slot-date" class="input" name="date" type="date" value="{{ values.date }}" required>
+    </div>
+    <div class="field">
+      <label class="label" for="slot-start">Start</label>
+      <select id="slot-start" class="input" name="start">
+        {% for option in start_options %}<option value="{{ option }}"{% if option == values.start %} selected{% endif %}>{{ option }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label class="label" for="slot-length">Length</label>
+      <select id="slot-length" class="input" name="length">
+        {% for value, label in length_options %}<option value="{{ value }}"{% if value == values.length %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label class="label" for="slot-capacity">People</label>
+      <input id="slot-capacity" class="input" name="capacity" type="text" inputmode="numeric"
+             placeholder="Any" value="{{ values.capacity }}" autocomplete="off">
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="button button-primary" type="submit">Find rooms</button>
+  </div>
+</form>
+
+<div id="rooms-results" class="rooms-results" aria-live="polite">
+  {% if error %}
+  <p class="error-message" role="alert">{{ error }}</p>
+  {% else %}
+  <h2 class="subtitle">Free {{ slot_text }}</h2>
+  {% for group in groups %}
+  <section class="office-group" aria-labelledby="office-{{ group.office_id }}">
+    <h3 class="office-name" id="office-{{ group.office_id }}">{{ group.office_name }}{% if group.is_own %} <span class="meta-inline">(your office)</span>{% endif %}</h3>
+    <ul class="free-rooms">
+      {% for room in group.rooms %}
+      <li class="free-room">
+        <span class="room-name">{{ room.name }}</span>
+        <span class="room-seats">{{ room.capacity }} {{ "person" if room.capacity == 1 else "people" }}</span>
+        <a class="button button-secondary" href="/bookings/new?room={{ room.id }}&{{ book_query }}">Book<span class="visually-hidden"> {{ room.name }}, {{ group.office_name }}</span></a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <p class="hint">No rooms are free then. Try another time or length.</p>
+  {% endfor %}
+
+  {% if in_slot %}
+  <h2 class="subtitle">Booked then</h2>
+  <ul class="booking-list">
+    {% for b in in_slot %}{% include "bookings/_item.html" %}{% endfor %}
+  </ul>
+  {% endif %}
+  {% endif %}
+</div>
+
+<h2 class="subtitle">Your upcoming bookings</h2>
+{% if upcoming %}
+<ul class="booking-list">
+  {% for b in upcoming %}{% include "bookings/_item.html" %}{% endfor %}
+</ul>
+{% else %}
+<p class="hint">You have no upcoming bookings.</p>
+{% endif %}
+{% endblock %}

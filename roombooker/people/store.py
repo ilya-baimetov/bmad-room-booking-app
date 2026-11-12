@@ -74,6 +74,19 @@ def get_person(session: Session, person_id: int) -> Row | None:
     return session.execute(_person_select().where(people.c.id == person_id)).first()
 
 
+def names(session: Session, person_ids: Iterable[int]) -> dict[int, str]:
+    """Names of these people, active or not."""
+    ids = set(person_ids)
+    if not ids:
+        return {}
+    rows = session.execute(select(people.c.id, people.c.name).where(people.c.id.in_(ids)))
+    return {row.id: row.name for row in rows}
+
+
+def office_names(session: Session) -> dict[int, str]:
+    return {row.id: row.name for row in session.execute(select(offices.c.id, offices.c.name))}
+
+
 # --- writes, used only by the seed CLI (AD-3, AD-9) ---------------------------
 
 

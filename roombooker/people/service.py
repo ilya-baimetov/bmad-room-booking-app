@@ -59,3 +59,13 @@ def get_active_person(session: Session, person_id: int) -> Person | None:
     if row is None or not row.active:
         return None
     return _to_person(row)
+
+
+def names(session: Session, person_ids) -> dict[int, str]:
+    """{id: name} for these people, including inactive ones (who keep their bookings)."""
+    return store.names(session, person_ids)
+
+
+def office_names(session: Session) -> dict[int, str]:
+    """{office id: office name}."""
+    return store.office_names(session)

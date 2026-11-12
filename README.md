@@ -18,7 +18,11 @@ uv run uvicorn roombooker.app:app                        # serve the app
 
 Open <http://127.0.0.1:8000/>. You land on Pick your name; type part of a name and pick it.
 Your name then shows in the top bar; tap it to switch to someone else.
+You land on Rooms: pick a date, start time and length (15 minutes to 4 hours) to see the free rooms,
+your own office first, and book one with a title and attendees. Open a booking to see it; the person
+who booked it can cancel it. Bookings can't overlap, start in the past or start more than 90 days ahead.
 Office managers land on Manage rooms, where they add, edit, close and reopen their office's rooms.
+Closing a room cancels its bookings that have not started yet.
 
 ## Loading people
 

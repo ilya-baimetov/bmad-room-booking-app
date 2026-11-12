@@ -506,3 +506,136 @@ a.button {
     margin-left: 0;
   }
 }
+
+/* rooms: find a free room */
+.slot-form {
+  margin: 0;
+}
+
+.slot-form .fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 767px) {
+  .slot-form .fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.rooms-results .error-message {
+  margin-top: var(--space-5);
+}
+
+.office-name {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+  line-height: var(--font-label-line-height);
+}
+
+.meta-inline {
+  color: var(--color-ink-muted);
+  font-weight: var(--font-meta-weight);
+}
+
+.free-rooms,
+.booking-list,
+.chosen-list,
+.attendee-names {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.free-room,
+.chosen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  min-height: var(--room-row-min-height);
+  margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  border: 1px solid var(--room-row-border);
+  border-radius: var(--room-row-radius);
+  background: var(--room-row-background);
+}
+
+.free-room .room-name,
+.chosen .person-name {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.room-seats {
+  color: var(--color-ink-muted);
+  font-size: var(--font-meta-size);
+  line-height: var(--font-meta-line-height);
+}
+
+.booking-item + .booking-item {
+  margin-top: var(--space-2);
+}
+
+.booking-link {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--slot-booked-radius);
+  background: var(--slot-booked-background);
+  color: var(--slot-booked-foreground);
+  text-decoration: none;
+}
+
+.booking-link:hover {
+  box-shadow: inset 0 0 0 1px var(--color-navy);
+}
+
+.booking-title {
+  font-weight: var(--font-label-weight);
+}
+
+.booking-when,
+.booking-where {
+  font-size: var(--font-meta-size);
+  line-height: var(--font-meta-line-height);
+}
+
+/* booking form and details */
+.booking-form .field,
+.attendees {
+  margin: 0 0 var(--space-4);
+}
+
+.attendees {
+  padding: 0;
+  border: 0;
+}
+
+.attendees .hint {
+  margin: 0 0 var(--space-3);
+}
+
+.booking-details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.booking-details dt {
+  color: var(--color-ink-muted);
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+  line-height: var(--font-body-line-height);
+}
+
+.booking-details dd {
+  margin: 0;
+}
+
+.back-link {
+  margin-top: var(--space-5);
+}

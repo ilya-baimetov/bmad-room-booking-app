@@ -58,12 +58,12 @@ def test_office_manager_lands_on_manage_rooms(page: Page):
     page.context.clear_cookies()
     page.goto("/")
     pick(page, "okaf", "Hannah Okafor")
-    expect(page.get_by_text("Booking opens soon.")).to_be_visible()
-    expect(page.locator(".tabs")).to_have_count(0)
+    expect(page).to_have_url(re.compile(r"/rooms$"))
+    expect(page.get_by_role("link", name="Manage rooms")).to_have_count(0)
 
     page.goto("/manage-rooms")  # the direct link
     expect(page.locator("#announce")).to_have_text(REFUSED)
-    expect(page.locator(".tabs")).to_have_count(0)
+    expect(page.get_by_role("link", name="Manage rooms")).to_have_count(0)
 
 
 def test_add_edit_close_reopen_without_reload(page: Page):
@@ -106,7 +106,8 @@ def test_add_edit_close_reopen_without_reload(page: Page):
     expect(row.locator(".room-capacity")).to_have_text("10")
 
     row.get_by_role("link", name=re.compile("^Close")).click()
-    expect(row).to_contain_text(f"Close {renamed}? No one can book it until you reopen it.")
+    expect(row).to_contain_text(f"Close {renamed}? No one can book it until you reopen it, "
+        "and its future bookings are cancelled.")
     row.get_by_role("link", name="Keep open").click()
     expect(row.locator(".room-status")).to_have_text("Open")
 
@@ -151,7 +152,8 @@ def test_plain_forms_without_javascript(new_context, live_server, viewport):
 
     row.get_by_role("link", name=re.compile("^Close")).click()
     expect(page).to_have_url(re.compile(r"/manage-rooms/\d+/close$"))
-    expect(row).to_contain_text(f"Close {renamed}? No one can book it until you reopen it.")
+    expect(row).to_contain_text(f"Close {renamed}? No one can book it until you reopen it, "
+        "and its future bookings are cancelled.")
     row.get_by_role("button", name="Close room").click()
     expect(page).to_have_url(re.compile(r"/manage-rooms\?notice=closed&room=\d+$"))
     expect(announce).to_have_text(f"Closed {renamed}.")

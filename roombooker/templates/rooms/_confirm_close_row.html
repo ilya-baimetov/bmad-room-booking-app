@@ -2,7 +2,7 @@
   <td colspan="4">
     <form class="confirm" method="post" action="/manage-rooms/{{ room.id }}/close"
           hx-post="/manage-rooms/{{ room.id }}/close" hx-target="closest tr" hx-swap="outerHTML">
-      <p class="confirm-question">Close {{ room.name }}? No one can book it until you reopen it.</p>
+      <p class="confirm-question">Close {{ room.name }}? No one can book it until you reopen it, and its future bookings are cancelled.</p>
       <div class="form-actions">
         <button class="button button-secondary" type="submit">Close room</button>
         <a class="button button-secondary" href="/manage-rooms" autofocus

@@ -1,0 +1,7 @@
+<li class="booking-item">
+  <a class="booking-link" href="/bookings/{{ b.id }}">
+    <span class="booking-title">{{ b.title }}</span>
+    <span class="booking-when">{{ b.start_at|day }}, {{ b.start_at|clock }}–{{ b.end_at|clock }}</span>
+    <span class="booking-where">{{ b.room.name }}, {{ b.office_name }} · Booked by {{ b.organiser_name }}</span>
+  </a>
+</li>

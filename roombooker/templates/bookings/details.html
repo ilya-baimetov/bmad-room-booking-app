@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ booking.title }}{% endblock %}
+{% block announce %}{% if notice %}<p class="notice">{{ notice }}</p>{% endif %}{% endblock %}
+{% block content %}
+<h1 class="title">{{ booking.title }}</h1>
+<dl class="booking-details">
+  <dt>Room</dt>
+  <dd>{{ booking.room.name }}, {{ booking.office_name }}</dd>
+  <dt>When</dt>
+  <dd>{{ booking.start_at|day }}, {{ booking.start_at|clock }}–{{ booking.end_at|clock }}</dd>
+  <dt>Booked by</dt>
+  <dd>{{ booking.organiser_name }}</dd>
+  {% if booking.attendees_visible %}
+  <dt>Attendees</dt>
+  <dd>
+    {% if booking.attendees %}
+    <ul class="attendee-names">{% for name in booking.attendees %}<li>{{ name }}</li>{% endfor %}</ul>
+    {% else %}None{% endif %}
+  </dd>
+  {% endif %}
+</dl>
+{% if confirming %}
+<form class="confirm" method="post" action="/bookings/{{ booking.id }}/cancel">
+  <p class="confirm-question">Cancel this booking? {{ booking.room.name }} becomes free for everyone.</p>
+  <div class="form-actions">
+    <button class="button button-secondary" type="submit">Cancel booking</button>
+    <a class="button button-secondary" href="/bookings/{{ booking.id }}" autofocus>Keep booking</a>
+  </div>
+</form>
+{% elif booking.can_cancel and not has_ended %}
+<div class="form-actions">
+  <a class="button button-secondary" href="/bookings/{{ booking.id }}/cancel">Cancel booking</a>
+</div>
+{% endif %}
+<p class="lead back-link"><a href="/rooms">Back to rooms</a></p>
+{% endblock %}
