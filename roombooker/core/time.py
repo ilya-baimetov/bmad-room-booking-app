@@ -58,6 +58,17 @@ def uk_to_utc(day: date, clock: time) -> datetime | None:
     return moment
 
 
+def uk_midnight(day: date) -> datetime:
+    """The UTC moment a UK day starts. UK clocks change at 01:00 or 02:00, so midnight
+    always exists and happens once."""
+    return datetime.combine(day, time()).replace(tzinfo=UK).astimezone(UTC)
+
+
+def week_start(day: date) -> date:
+    """The Monday of `day`'s week."""
+    return day - timedelta(days=day.weekday())
+
+
 def next_quarter_hour(moment: datetime) -> datetime:
     """`moment` rounded up to a quarter hour (unchanged when it is on one)."""
     moment = moment.replace(second=0, microsecond=0) + (

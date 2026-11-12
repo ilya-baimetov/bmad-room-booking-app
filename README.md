@@ -21,6 +21,8 @@ Your name then shows in the top bar; tap it to switch to someone else.
 You land on Rooms: pick a date, start time and length (15 minutes to 4 hours) to see the free rooms,
 your own office first, and book one with a title and attendees. Open a booking to see it; the person
 who booked it can cancel it. Bookings can't overlap, start in the past or start more than 90 days ahead.
+My bookings shows the bookings you made or were invited to, by day or by week, with today highlighted;
+on a phone the week is a list of days. Tap a booking to open it.
 Office managers land on Manage rooms, where they add, edit, close and reopen their office's rooms.
 Closing a room cancels its bookings that have not started yet.
 

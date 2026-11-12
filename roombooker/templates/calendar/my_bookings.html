@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}My bookings{% endblock %}
+{% block content %}
+<h1 class="title">My bookings</h1>
+<nav class="calendar-nav" aria-label="Calendar">
+  <div class="calendar-views">
+    <a class="button button-secondary" href="{{ day_url }}"{% if view == "day" %} aria-current="page"{% endif %}>Day</a>
+    <a class="button button-secondary" href="{{ week_url }}"{% if view == "week" %} aria-current="page"{% endif %}>Week</a>
+  </div>
+  <div class="calendar-steps">
+    <a class="button button-secondary" href="{{ previous_url }}" aria-label="{{ previous_label }}">&larr;<span class="step-label"> Previous</span></a>
+    <a class="button button-secondary" href="{{ today_url }}">Today</a>
+    <a class="button button-secondary" href="{{ next_url }}" aria-label="{{ next_label }}"><span class="step-label">Next </span>&rarr;</a>
+  </div>
+</nav>
+
+{% set today_day = view == "day" and days[0].is_today %}
+<h2 class="subtitle calendar-heading{% if today_day %} is-today{% endif %}"{% if today_day %} aria-current="date"{% endif %}>{{ heading }}</h2>
+{% if is_empty %}
+<p class="hint">{{ empty_text }}</p>
+{% endif %}
+{% if view == "week" or not is_empty %}
+<div class="calendar calendar-{{ view }}">
+  {% for d in days %}
+  <section class="calendar-day{% if d.is_today and view == "week" %} is-today{% endif %}"{% if view == "week" %} aria-labelledby="day-{{ d.date.isoformat() }}"{% endif %}>
+    {% if view == "week" %}
+    <h3 class="calendar-day-heading" id="day-{{ d.date.isoformat() }}"{% if d.is_today %} aria-current="date"{% endif %}>{% if d.is_today %}Today, {% endif %}{{ d.label }}</h3>
+    {% endif %}
+    {% if d.bookings %}
+    <ul class="calendar-bookings">
+      {% for b in d.bookings %}
+      <li class="calendar-booking">
+        <a class="calendar-booking-link{% if b.organiser_id == person.id %} is-organiser{% endif %}" href="/bookings/{{ b.id }}">
+          <span class="booking-when">{{ b.start_at|clock }}–{{ b.end_at|clock }}</span>
+          <span class="booking-title">{{ b.title }}</span>
+          <span class="booking-where">{{ b.room.name }}, {{ b.office_name }}</span>
+          <span class="booking-role">{{ "Organiser" if b.organiser_id == person.id else "Attending" }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="calendar-nothing">Nothing booked</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

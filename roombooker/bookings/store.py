@@ -63,6 +63,23 @@ def upcoming_for_organiser(
     ).all()
 
 
+def for_person(session: Session, person_id: int, start_at: str, end_at: str) -> Sequence[Row]:
+    """Bookings overlapping [start_at, end_at) that the person organises or attends,
+    in start order."""
+    attending = select(booking_attendees.c.booking_id).where(
+        booking_attendees.c.person_id == person_id
+    )
+    return session.execute(
+        select(bookings)
+        .where(
+            bookings.c.start_at < end_at,
+            bookings.c.end_at > start_at,
+            (bookings.c.organiser_id == person_id) | bookings.c.id.in_(attending),
+        )
+        .order_by(bookings.c.start_at, bookings.c.id)
+    ).all()
+
+
 def get(session: Session, booking_id: int) -> Row | None:
     return session.execute(select(bookings).where(bookings.c.id == booking_id)).first()
 

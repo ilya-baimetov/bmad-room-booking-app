@@ -639,3 +639,123 @@ a.button {
 .back-link {
   margin-top: var(--space-5);
 }
+
+/* my bookings: day and week calendar */
+.calendar-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+}
+
+.calendar-views,
+.calendar-steps {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.calendar-views [aria-current="page"] {
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.calendar-heading.is-today,
+.calendar-day.is-today .calendar-day-heading {
+  background: var(--color-navy-tint);
+}
+
+.calendar-heading.is-today {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--rounded-sm);
+}
+
+.calendar-bookings {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-booking + .calendar-booking {
+  margin-top: var(--space-2);
+}
+
+.calendar-booking-link {
+  display: flex;
+  flex-direction: column;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--slot-mine-radius);
+  background: var(--slot-mine-background);
+  color: var(--slot-mine-foreground);
+  text-decoration: none;
+}
+
+.calendar-booking-link:hover {
+  background: var(--color-navy-hover);
+}
+
+.calendar-booking-link:focus-visible {
+  outline: 3px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+.booking-role {
+  font-size: var(--font-meta-size);
+  line-height: var(--font-meta-line-height);
+}
+
+.calendar-day-heading {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--rounded-sm);
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+  line-height: var(--font-label-line-height);
+}
+
+.calendar-nothing {
+  margin: 0;
+  padding: 0 var(--space-2);
+  color: var(--color-ink-muted);
+  font-size: var(--font-meta-size);
+}
+
+.calendar-week .calendar-day + .calendar-day {
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+  }
+
+  .calendar-week .calendar-day {
+    min-height: 240px;
+    padding: var(--space-2);
+    overflow-wrap: anywhere;
+  }
+
+  .calendar-week .calendar-day + .calendar-day {
+    margin-top: 0;
+    border-left: 1px solid var(--color-border);
+  }
+
+  .calendar-week .calendar-day.is-today {
+    background: var(--color-navy-tint);
+  }
+}
+
+@media (max-width: 767px) {
+  .step-label {
+    display: none;
+  }
+}
+
+/* the week needs room for seven columns */
+.page:has(.calendar-week) {
+  max-width: 1120px;
+}

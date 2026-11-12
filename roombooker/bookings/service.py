@@ -193,6 +193,15 @@ def upcoming_bookings(session: Session, viewer: Person) -> list[BookingView]:
     return _views(session, viewer, list(rows))
 
 
+def bookings_for_person(
+    session: Session, viewer: Person, start_at: datetime, end_at: datetime
+) -> list[BookingView]:
+    """The viewer's bookings, organised or attended, overlapping [start_at, end_at),
+    soonest first."""
+    rows = store.for_person(session, viewer.id, clock.to_text(start_at), clock.to_text(end_at))
+    return _views(session, viewer, list(rows))
+
+
 def room_to_book(session: Session, room_id: int) -> tuple[Room, str]:
     """The room and its office's name, for the booking form; RoomNotFound if none."""
     room = rooms_service.find_room(session, room_id)

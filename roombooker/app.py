@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from roombooker.bookings import web as bookings_web
+from roombooker.calendar import web as calendar_web
 from roombooker.core import time as uk
 from roombooker.core.errors import DomainError, domain_error_handler
 from roombooker.core.identity import NeedsPerson, needs_person_handler, path_with_query, pick_url
@@ -47,6 +48,7 @@ def create_app() -> FastAPI:
     app.include_router(people_web.router)
     app.include_router(rooms_web.router)
     app.include_router(bookings_web.router)
+    app.include_router(calendar_web.router)
     return app
 
 

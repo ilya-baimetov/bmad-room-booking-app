@@ -15,6 +15,7 @@
     {% if person %}
     <nav class="tabs" aria-label="Screens">
       <a class="tab" href="/rooms"{% if request.url.path == "/rooms" %} aria-current="page"{% endif %}>Rooms</a>
+      <a class="tab" href="/my-bookings"{% if request.url.path == "/my-bookings" %} aria-current="page"{% endif %}>My bookings</a>
       {% if can_manage_office(person, person.home_office_id) %}
       <a class="tab" href="/manage-rooms"{% if request.url.path.startswith("/manage-rooms") %} aria-current="page"{% endif %}>Manage rooms</a>
       {% endif %}
