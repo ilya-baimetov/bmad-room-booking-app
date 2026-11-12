@@ -1,4 +1,4 @@
-"""People rules: who is active, and finding people by name.
+"""People rules: who is active, finding people by name, and who manages an office.
 
 Must never import `core.identity` (it imports this module).
 """
@@ -43,6 +43,14 @@ def search_active_people(session: Session, text: str) -> list[Person]:
     if not text:
         return []
     return [_to_person(row) for row in store.search_active(session, text, SEARCH_LIMIT)]
+
+
+def can_manage_office(person: Person, office_id: int) -> bool:
+    """RULE-4 (AD-7): only an office manager of their own home office manages it.
+
+    The one predicate for services and templates alike.
+    """
+    return person.is_office_manager and person.home_office_id == office_id
 
 
 def get_active_person(session: Session, person_id: int) -> Person | None:

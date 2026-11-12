@@ -1,0 +1,18 @@
+<tr id="room-{{ room.id }}" class="room-row{% if room.is_closed %} is-closed{% endif %}">
+  <td class="room-name">{{ room.name }}</td>
+  <td class="room-capacity" data-label="Capacity">{{ room.capacity }}</td>
+  <td class="room-status">{{ room.status }}</td>
+  <td class="room-actions">
+    <a class="button button-secondary" href="/manage-rooms/{{ room.id }}/edit"
+       hx-get="/manage-rooms/{{ room.id }}/edit" hx-target="closest tr" hx-swap="outerHTML">Edit<span class="visually-hidden"> {{ room.name }}</span></a>
+    {% if room.is_closed %}
+    <form method="post" action="/manage-rooms/{{ room.id }}/reopen"
+          hx-post="/manage-rooms/{{ room.id }}/reopen" hx-target="closest tr" hx-swap="outerHTML">
+      <button class="button button-secondary" type="submit">Reopen<span class="visually-hidden"> {{ room.name }}</span></button>
+    </form>
+    {% else %}
+    <a class="button button-secondary" href="/manage-rooms/{{ room.id }}/close"
+       hx-get="/manage-rooms/{{ room.id }}/close" hx-target="closest tr" hx-swap="outerHTML">Close<span class="visually-hidden"> {{ room.name }}</span></a>
+    {% endif %}
+  </td>
+</tr>

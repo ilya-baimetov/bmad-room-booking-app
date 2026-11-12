@@ -1,4 +1,5 @@
-"""Application factory: routes, static files, templates and the identity redirect."""
+"""Application factory: routes, static files, templates, the identity redirect and the
+domain error handler."""
 
 import logging
 import sys
@@ -8,8 +9,11 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from roombooker.core.errors import DomainError, domain_error_handler
 from roombooker.core.identity import NeedsPerson, needs_person_handler, path_with_query, pick_url
 from roombooker.people import web as people_web
+from roombooker.people.service import can_manage_office
+from roombooker.rooms import web as rooms_web
 
 PACKAGE_DIR = Path(__file__).parent
 
@@ -30,11 +34,14 @@ def create_app() -> FastAPI:
     templates = Jinja2Templates(directory=PACKAGE_DIR / "templates")
     templates.env.globals["pick_url"] = pick_url
     templates.env.globals["path_with_query"] = path_with_query
+    templates.env.globals["can_manage_office"] = can_manage_office
     app.state.templates = templates
 
     app.mount("/static", StaticFiles(directory=PACKAGE_DIR / "static"), name="static")
     app.add_exception_handler(NeedsPerson, needs_person_handler)
+    app.add_exception_handler(DomainError, domain_error_handler)
     app.include_router(people_web.router)
+    app.include_router(rooms_web.router)
     return app
 
 

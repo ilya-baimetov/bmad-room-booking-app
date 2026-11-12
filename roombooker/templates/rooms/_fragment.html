@@ -1,0 +1,4 @@
+{# An htmx response: the fragment, then out-of-band swaps (after it, so a <tr> parses). #}
+{% include fragment %}
+{% if table_oob %}{% include "rooms/_table.html" %}{% endif %}
+<div id="announce" hx-swap-oob="innerHTML">{% if notice %}<p class="notice">{{ notice }}</p>{% endif %}</div>

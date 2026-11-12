@@ -5,17 +5,7 @@ import re
 import httpx
 from playwright.sync_api import Page, expect
 
-from tests.e2e.conftest import BUILD_SEED
-
-
-def pick(page: Page, typed: str, name: str) -> None:
-    """On Pick your name: type part of a name, wait for the type-ahead, pick `name`."""
-    url_before = page.url
-    page.get_by_label("Your name").fill(typed)
-    button = page.get_by_role("button", name=re.compile(rf"^{re.escape(name)}\b"))
-    expect(button).to_be_visible()
-    assert page.url == url_before  # results came by htmx, not a page load
-    button.click()
+from tests.e2e.conftest import BUILD_SEED, pick
 
 
 def top_bar_name(page: Page):
@@ -46,16 +36,17 @@ def test_pick_name_shows_in_top_bar_after_reload(page: Page):
 
 
 def test_switch_name_returns_to_same_page(page: Page):
+    # Neither is an office manager: since story 2, `/` sends office managers to Manage rooms.
     page.goto("/?from=switch")
-    pick(page, "kowal", "Anna Kowalski")
+    pick(page, "fras", "Chloe Fraser")
     expect(page).to_have_url(re.compile(r"/\?from=switch$"))
 
     page.locator(".top-bar .current-person").click()
     expect(page.get_by_role("heading", name="Pick your name")).to_be_visible()
-    pick(page, "tariq", "Tariq Mahmood")
+    pick(page, "kieran", "Kieran Walsh")
 
     expect(page).to_have_url(re.compile(r"/\?from=switch$"))
-    expect(top_bar_name(page)).to_have_text("Tariq Mahmood")
+    expect(top_bar_name(page)).to_have_text("Kieran Walsh")
 
 
 def test_reload_without_person_sends_them_to_pick_your_name(page: Page, live_server, tmp_path):

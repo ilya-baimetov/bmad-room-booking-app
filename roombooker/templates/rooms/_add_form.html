@@ -1,0 +1,19 @@
+<form id="add-room" class="room-form add-room" method="post" action="/manage-rooms"
+      hx-post="/manage-rooms" hx-target="this" hx-swap="outerHTML">
+  <div class="fields">
+    <div class="field field-name">
+      <label class="label" for="add-room-name">Room name</label>
+      <input id="add-room-name" class="input" name="name" type="text"
+             value="{{ values.name if values else '' }}" autocomplete="off">
+    </div>
+    <div class="field field-capacity">
+      <label class="label" for="add-room-capacity">Capacity</label>
+      <input id="add-room-capacity" class="input" name="capacity" type="text"
+             inputmode="numeric" value="{{ values.capacity if values else '' }}" autocomplete="off">
+    </div>
+  </div>
+  {% include "rooms/_errors.html" %}
+  <div class="form-actions">
+    <button class="button button-primary" type="submit">Add room</button>
+  </div>
+</form>

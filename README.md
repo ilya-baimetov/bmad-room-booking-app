@@ -18,6 +18,7 @@ uv run uvicorn roombooker.app:app                        # serve the app
 
 Open <http://127.0.0.1:8000/>. You land on Pick your name; type part of a name and pick it.
 Your name then shows in the top bar; tap it to switch to someone else.
+Office managers land on Manage rooms, where they add, edit, close and reopen their office's rooms.
 
 ## Loading people
 

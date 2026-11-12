@@ -6,6 +6,7 @@ Needs a browser: `uv run playwright install chromium`.
 """
 
 import os
+import re
 import socket
 import sqlite3
 import subprocess
@@ -16,6 +17,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from playwright.sync_api import Page, expect
 
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_SEED = ROOT / "seeds" / "build-people.csv"
@@ -102,3 +104,13 @@ def viewport(request) -> dict[str, int]:
 @pytest.fixture
 def context(new_context, live_server, viewport):
     return new_context(base_url=live_server.url, viewport=viewport)
+
+
+def pick(page: Page, typed: str, name: str) -> None:
+    """On Pick your name: type part of a name, wait for the type-ahead, pick `name`."""
+    url_before = page.url
+    page.get_by_label("Your name").fill(typed)
+    button = page.get_by_role("button", name=re.compile(rf"^{re.escape(name)}\b"))
+    expect(button).to_be_visible()
+    assert page.url == url_before  # results came by htmx, not a page load
+    button.click()

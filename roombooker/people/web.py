@@ -1,4 +1,4 @@
-"""Pick your name, and the landing page until Rooms exists (R1, R2, R9)."""
+"""Pick your name, and the landing page: office managers go on to Manage rooms (R1, R2, R9)."""
 
 import logging
 from typing import Annotated
@@ -24,6 +24,8 @@ def _render(request: Request, template: str, **context) -> Response:
 
 @router.api_route("/", methods=["GET", "HEAD"])
 def landing(request: Request, person: CurrentPerson) -> Response:
+    if service.can_manage_office(person, person.home_office_id):
+        return RedirectResponse("/manage-rooms", status_code=303)
     return _render(request, "people/landing.html", person=person)
 
 

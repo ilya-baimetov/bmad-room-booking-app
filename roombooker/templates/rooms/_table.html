@@ -1,0 +1,27 @@
+<div id="rooms-table" class="rooms"{% if table_oob %} hx-swap-oob="true"{% endif %}>
+  {% if rooms %}
+  <table class="rooms-table">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Capacity</th>
+        <th scope="col">Status</th>
+        <th scope="col"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for room in rooms %}
+      {% if room.id == editing_id %}
+      {% with errors=edit_errors, values=edit_values %}{% include "rooms/_edit_row.html" %}{% endwith %}
+      {% elif room.id == confirming_id %}
+      {% include "rooms/_confirm_close_row.html" %}
+      {% else %}
+      {% include "rooms/_row.html" %}
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="hint">No rooms in {{ person.home_office_name }} yet.</p>
+  {% endif %}
+</div>

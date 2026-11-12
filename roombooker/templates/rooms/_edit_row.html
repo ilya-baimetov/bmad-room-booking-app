@@ -1,0 +1,26 @@
+{% set values = values or {"name": room.name, "capacity": room.capacity} %}
+<tr id="room-{{ room.id }}" class="room-row is-editing">
+  <td colspan="4">
+    <form class="room-form" method="post" action="/manage-rooms/{{ room.id }}"
+          hx-post="/manage-rooms/{{ room.id }}" hx-target="closest tr" hx-swap="outerHTML">
+      <div class="fields">
+        <div class="field field-name">
+          <label class="label" for="room-{{ room.id }}-name">Room name</label>
+          <input id="room-{{ room.id }}-name" class="input" name="name" type="text"
+                 value="{{ values.name }}" autocomplete="off" autofocus>
+        </div>
+        <div class="field field-capacity">
+          <label class="label" for="room-{{ room.id }}-capacity">Capacity</label>
+          <input id="room-{{ room.id }}-capacity" class="input" name="capacity" type="text"
+                 inputmode="numeric" value="{{ values.capacity }}" autocomplete="off">
+        </div>
+      </div>
+      {% include "rooms/_errors.html" %}
+      <div class="form-actions">
+        <button class="button button-primary" type="submit">Save</button>
+        <a class="button button-secondary" href="/manage-rooms"
+           hx-get="/manage-rooms" hx-select="#room-{{ room.id }}" hx-target="closest tr" hx-swap="outerHTML">Cancel</a>
+      </div>
+    </form>
+  </td>
+</tr>

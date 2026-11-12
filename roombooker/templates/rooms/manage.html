@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Manage rooms{% endblock %}
+{% block announce %}{% if notice %}<p class="notice">{{ notice }}</p>{% endif %}{% endblock %}
+{% block content %}
+<h1 class="title">Manage rooms</h1>
+<p class="meta">{{ person.home_office_name }}</p>
+{% include "rooms/_table.html" %}
+<h2 class="subtitle">Add a room</h2>
+{% with errors=add_errors, values=add_values %}{% include "rooms/_add_form.html" %}{% endwith %}
+{% endblock %}
