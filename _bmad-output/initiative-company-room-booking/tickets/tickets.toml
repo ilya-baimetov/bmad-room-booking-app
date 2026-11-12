@@ -1,0 +1,24 @@
+# Company Room Booking: epics in build order. Approved by the user 2026-11-12.
+
+[[epic]]
+id = 1
+slug = "epic-offices-and-rooms"
+title = "Office managers keep their rooms current"
+description = "On the deployed app, anyone picks their name from the seeded people, and an office manager adds, edits, closes and reopens their own office's rooms. Owns the platform baseline (scaffold, database, seed loading, deployment), the app shell (top bar with the current name, tabs, DESIGN.md tokens), the type-ahead people picker, the current person and the office-manager check, all of which epics 2 and 3 reuse. Closing a room here only marks it closed; refusing bookings of a closed room, the future-booking count on the close confirmation and the fate of those bookings are epic 2's."
+covers = ["R1", "R2", "R3", "R4", "R5"]
+
+[[epic]]
+id = 2
+slug = "epic-find-and-book"
+title = "Anyone finds a free room and books it, with no double bookings"
+description = "On laptop and phone, a person sees which rooms in any office are free for any date, time and length within the 10-second target (RULE-8), books one with attendees in three taps or fewer, and the organiser or an office manager changes or cancels it; overlapping bookings and bookings of closed rooms are refused, and closing a room shows and settles its future bookings. Reuses epic 1's shell, people picker and office-manager check. Owns the bookings data, the date switcher and the booking details panel with Change and Cancel, which epic 3 reuses; showing bookings in calendars is epic 3's."
+covers = ["R5", "R6", "R7", "R8", "R9", "R10", "R11", "R15", "R16"]
+after = [{ epic = 1, needs = "the deployed app with offices, people, rooms, closed-room status, the shell, the people picker, the current person and the office-manager check" }]
+
+[[epic]]
+id = 3
+slug = "epic-my-calendar"
+title = "Each person sees their own bookings by day and week"
+description = "A person sees the bookings they organise and attend, including every booking they were added to as an attendee, in a built-in calendar, moves by day and week, and opens a booking to change or cancel it. Reuses epic 1's shell and epic 2's date switcher and booking details panel; for R7 it delivers the booking showing in the organiser's and attendees' calendars."
+covers = ["R7", "R12", "R13", "R14"]
+after = [{ epic = 2, needs = "bookings with attendees, the date switcher, and the booking details panel with Change and Cancel" }]

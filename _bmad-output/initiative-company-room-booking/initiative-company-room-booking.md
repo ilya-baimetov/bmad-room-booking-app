@@ -10,7 +10,7 @@ companions:
   - _bmad-output/initiative-company-room-booking/ux-company-room-booking/EXPERIENCE.md
   - _bmad-output/initiative-company-room-booking/ux-company-room-booking/DESIGN.md
 after: []
-risk: medium
+risk: high
 ---
 
 # Company Room Booking
@@ -102,4 +102,8 @@ Release one only. Out, per PRD Non-goals and MVP scope:
 - Open question: Go-live date (PRD OQ-1). Owner: user. Blocks rollout planning.
 - Open question: How long past bookings are kept, and what data-protection duty applies to staff names and attendee lists (PRD OQ-3). Owner: user. Needed before go-live.
 - Open question: Where the app runs so all three offices reach it on laptop and phone (PRD OQ-4). Owner: bmad-architecture. Needed before the first build.
-- Open question: What happens to a closed room's future bookings (PRD FR-5). Owner: the rooms epic.
+- Open question: What happens to a closed room's future bookings (PRD FR-5). Owner: epic-find-and-book.
+- Decision: 2026-11-12, user: the first epic is offices and rooms, because nothing can be booked until rooms exist; the platform baseline is its first stories. Sofia's default would have opened on the booking path, the riskiest (RULE-1 under concurrent bookings); the user's order also lets office managers enter and check rooms on the live app before go-live, as the rollout asks.
+- Decision: 2026-11-12, user: approved three epics in build order: offices and rooms, find and book, my calendar (tickets/tickets.toml).
+- Decision: 2026-11-12, user: the fate of a closed room's future bookings moves from the rooms epic to epic-find-and-book, because bookings exist only there; epic 1's close only marks the room closed.
+- Decision: 2026-11-12: shared decisions (hosting, rendering, data model, UK time, overlap enforcement under concurrent bookings, the remembered name, the office-manager check) go to a bmad-architecture spine before epic 1 is built.
