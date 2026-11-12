@@ -9,6 +9,7 @@ sources:
 companions:
   - _bmad-output/initiative-company-room-booking/ux-company-room-booking/EXPERIENCE.md
   - _bmad-output/initiative-company-room-booking/ux-company-room-booking/DESIGN.md
+  - _bmad-output/initiative-company-room-booking/architecture-company-room-booking/architecture-company-room-booking.md
 after: []
 risk: high
 ---
@@ -86,6 +87,7 @@ Release one only. Out, per PRD Non-goals and MVP scope:
 - brief — _bmad-output/initiative-company-room-booking/brief-company-room-booking/brief-company-room-booking.md, Problem, Success criteria
 - experience — _bmad-output/initiative-company-room-booking/ux-company-room-booking/EXPERIENCE.md: surfaces, Booking Visibility, component and state patterns, key flows, accessibility floor
 - design — _bmad-output/initiative-company-room-booking/ux-company-room-booking/DESIGN.md: visual identity and tokens
+- architecture — _bmad-output/initiative-company-room-booking/architecture-company-room-booking/architecture-company-room-booking.md: AD-1 to AD-13 (paradigm, table ownership, overlap enforcement, UK time, current person, authorisation, hosting), Capability → Architecture Map, Deferred
 
 ## Notes
 
@@ -100,8 +102,8 @@ Release one only. Out, per PRD Non-goals and MVP scope:
 - Assumption: One UK time zone serves all three offices (PRD A15).
 - Assumption: All three offices go live on one date (PRD A16).
 - Open question: Go-live date (PRD OQ-1). Owner: user. Blocks rollout planning.
-- Open question: How long past bookings are kept, and what data-protection duty applies to staff names and attendee lists (PRD OQ-3). Owner: user. Needed before go-live.
-- Open question: Where the app runs so all three offices reach it on laptop and phone (PRD OQ-4). Owner: bmad-architecture. Needed before the first build.
+- Open question: How long past bookings are kept, and what data-protection duty applies to staff names and attendee lists (PRD OQ-3); also decides whether a cancelled booking stays deleted (architecture AD-13). Owner: user. Needed before go-live.
+- Open question: Which host runs the app, and can it be reached only from company networks (office Wi-Fi, VPN) as architecture AD-11 assumes, since there is no sign-in (PRD OQ-4, narrowed by AD-11). Owner: user with IT. Blocks epic-offices-and-rooms' deployment story, not its other stories.
 - Open question: What happens to a closed room's future bookings (PRD FR-5). Owner: epic-find-and-book.
 - Decision: 2026-11-12, user: the first epic is offices and rooms, because nothing can be booked until rooms exist; the platform baseline is its first stories. Sofia's default would have opened on the booking path, the riskiest (RULE-1 under concurrent bookings); the user's order also lets office managers enter and check rooms on the live app before go-live, as the rollout asks.
 - Decision: 2026-11-12, user: approved three epics in build order: offices and rooms, find and book, my calendar (tickets/tickets.toml).

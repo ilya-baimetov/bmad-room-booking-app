@@ -40,6 +40,7 @@ Office managers in London, Manchester and Leeds keep an accurate room list on th
 - parent — _bmad-output/initiative-company-room-booking/initiative-company-room-booking.md, section Requirements (R1 to R5) and Constraints
 - experience — _bmad-output/initiative-company-room-booking/ux-company-room-booking/EXPERIENCE.md, Pick your name, Manage rooms, Rooms table
 - design — _bmad-output/initiative-company-room-booking/ux-company-room-booking/DESIGN.md
+- architecture — _bmad-output/initiative-company-room-booking/architecture-company-room-booking/architecture-company-room-booking.md, AD-1, AD-2, AD-3, AD-6, AD-7, AD-9, AD-10, AD-11, AD-12, Structural Seed
 
 ## Notes
 

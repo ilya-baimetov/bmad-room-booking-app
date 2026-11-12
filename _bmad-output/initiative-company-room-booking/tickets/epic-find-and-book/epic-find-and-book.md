@@ -40,6 +40,7 @@ Staff in all three offices find and book a free room in seconds with no double b
 - parent — _bmad-output/initiative-company-room-booking/initiative-company-room-booking.md, section Requirements (R5 to R11, R15, R16) and Constraints
 - experience — _bmad-output/initiative-company-room-booking/ux-company-room-booking/EXPERIENCE.md, Rooms, Booking sheet, Booking details, Booking Visibility, State Patterns
 - design — _bmad-output/initiative-company-room-booking/ux-company-room-booking/DESIGN.md
+- architecture — _bmad-output/initiative-company-room-booking/architecture-company-room-booking/architecture-company-room-booking.md, AD-3, AD-4, AD-5, AD-7, AD-8, AD-12, AD-13
 
 ## Notes
 

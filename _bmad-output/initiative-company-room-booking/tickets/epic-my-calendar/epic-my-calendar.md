@@ -38,6 +38,7 @@ Each person trusts the app as their only room calendar, which retires the spread
 - parent — _bmad-output/initiative-company-room-booking/initiative-company-room-booking.md, section Requirements (R7, R12 to R14) and Constraints
 - experience — _bmad-output/initiative-company-room-booking/ux-company-room-booking/EXPERIENCE.md, My bookings, My bookings calendar, Responsive & Platform
 - design — _bmad-output/initiative-company-room-booking/ux-company-room-booking/DESIGN.md
+- architecture — _bmad-output/initiative-company-room-booking/architecture-company-room-booking/architecture-company-room-booking.md, AD-3, AD-5, AD-7, AD-8, AD-13
 
 ## Notes
 
