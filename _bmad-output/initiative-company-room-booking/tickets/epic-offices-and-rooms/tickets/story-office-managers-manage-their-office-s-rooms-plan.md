@@ -3,7 +3,7 @@ title: "Office managers manage their office's rooms"
 type: feature
 ticket: '2'
 created: '2026-11-12'
-status: built
+status: done
 baseline_revision: '22bbc6afcf292099b9ee51e1e7190b9019a59f4b'
 route: full
 route_source: auto
