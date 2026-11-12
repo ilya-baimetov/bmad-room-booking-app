@@ -1,0 +1,24 @@
+# epic-offices-and-rooms: stories in build order. Approved by the user 2026-11-12.
+# Deployment, CI and integrated verification on the deployed app are deferred, not dropped (epic Notes).
+
+[[entry]]
+id = 1
+type = "story"
+title = "Pick and switch your name, end to end"
+description = "Tracer bullet on the user's computer: scaffolds the roombooker package per the architecture Stack and Structural Seed (uv project, core settings and SQLite session with the AD-11 pragmas, an Alembic migration for offices and people with every AD-9 column: email, name, home office, office-manager mark, active; pytest and Playwright harness); adds the seed CLI with load and reload from the R8 CSV (people updated by email, anyone missing marked inactive and keeping their id) and a made-up build seed of about 30 people across the three offices; serves Pick your name with type-ahead over active people inside the base.html shell with DESIGN.md tokens and the current name in the top bar; sets the 400-day person_id cookie read only by core.current_person, which sends a missing, unknown or inactive name to Pick your name and back to the page asked for; and lets a person switch name from the top bar. After picking, everyone lands on the 'Booking opens soon.' page; story 2 sends office managers to Manage rooms instead. Story 2 builds on this scaffold, shell and current person."
+verify = "On the user's computer, at laptop and phone widths: after loading the build seed, typing part of a name and picking it shows that name in the top bar after a reload; switching name from the top bar returns to the same page; reloading a seed file without one person sends their browser to Pick your name, where they no longer appear, while everyone else keeps their id."
+covers = ["R1", "R2", "R8"]
+after = []
+hitl = true # the user installs Python 3.14 and uv if missing and runs the app locally the first time
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Office managers manage their office's rooms"
+description = "On the user's computer: adds the rooms table migration, rooms.service with the AD-7 office-manager check raising NotAllowed, the AD-12 error handler, and the Manage rooms tab and rooms table (name, capacity, Open/Closed) with Add room and, per row, Edit (name and capacity only) and Close / Reopen, closing asking once for confirmation; refuses an empty name, a capacity that is not a whole number of 1 or more, or a name already used in the office, with the reason and the form keeping its values; hides the tab from anyone who is not an office manager of that office, shows 'Only office managers can manage rooms.' on a direct link, and refuses a direct request; logs the acting person on every write; lands office managers on Manage rooms after picking their name. Uses story 1's shell, current person and seeded office-manager marks. The future-booking count on the close confirmation is epic-find-and-book's."
+verify = "On the user's computer, at laptop and phone widths: a seeded office manager adds a room and sees it Open, renames it and changes its capacity, closes it after confirming and sees Closed, then reopens it; an empty name, a capacity of 0 and a duplicate name are each refused with the reason; a person who is not an office manager, and an office manager of another office, see no Manage rooms for that office, get the refusal message on the direct link, and are refused a direct request."
+covers = ["R3", "R4", "R5", "R6", "R7", "R9"]
+after = [1]
+hitl = false
+risk = "medium"

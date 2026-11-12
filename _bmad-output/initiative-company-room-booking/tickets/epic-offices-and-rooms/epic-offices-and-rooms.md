@@ -74,7 +74,7 @@ Office managers in London, Manchester and Leeds keep an accurate room list on th
 - Open question: Host provider and company-network-only reach (initiative OQ-4). Owner: user with IT. Blocks the host stand-up story and so the epic's close, not its other stories.
 - Open question: Where the code is hosted, which decides CI. Owner: user. Blocks CI only; `uv run pytest` is the check until then.
 - Open question: HR's column names. Owner: user with HR. Needed before HR's list loads; R8's columns adapt, the email key holds.
-- Unknown: OQ-4 gates the story that stands the app up on the company host; it goes on that entry's `unknown` when stories are planned.
+- Unknown: OQ-4 gates the deferred story that stands the app up on the company host; it goes on that entry's `unknown` when it is planned.
 - Decision: 2026-11-12, user: opening epic, because nothing can be booked until rooms exist; the platform baseline is its first stories.
 - Decision: 2026-11-12, user: deployment splits into a deploy bundle (Dockerfile, Caddyfile, Litestream config) that runs locally, unblocked, and standing it up on the company host, a person's step blocked on OQ-4.
 - Decision: 2026-11-12, user: seed CSV columns `email, name, office, office_manager`, office by name; a made-up build seed of about 30 people across the three offices.
@@ -82,3 +82,8 @@ Office managers in London, Manchester and Leeds keep an accurate room list on th
 - Decision: 2026-11-12, user: tabs appear only once their screen exists; the "Booking opens soon." landing for people who are not office managers is replaced by epic-find-and-book's Rooms.
 - Decision: 2026-11-12, user: Playwright for Python for integrated verification; CI is chosen in the scaffold story once the code has a host.
 - Decision: 2026-11-12, user: validation wording, a capacity ceiling and picker search behavior are left to the stories; no spike needed.
+- Decision: 2026-11-12, user: two stories only, both on the user's computer, to keep the walkthrough short. Sofia's nine-story draft (deploy bundle, host stand-up, CI, refactor sweep, integrated verification on the deployed app, finer people and rooms stories) was declined for now.
+- Decision: 2026-11-12, user: deployment (deploy bundle and host stand-up), CI and integrated verification on the deployed app are deferred, not dropped; Done when is unchanged, so this epic stays open until they are planned as new entries, and epic-find-and-book's wait on the deployed app holds.
+- Decision: 2026-11-12: tracer bullet is story 1, "Pick and switch your name, end to end": scaffold, people table, seed load and reload, picker, current person and shell, running locally.
+- Decision: 2026-11-12: switching name and the seed reload are merged into story 1, and add, edit, close and reopen into story 2; if story 2 runs past one build session, split it into adding rooms and editing, closing and reopening them.
+- Decision: 2026-11-12: no refactor sweep or closing end-to-end story, since the epic has two entries.
