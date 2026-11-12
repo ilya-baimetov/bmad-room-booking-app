@@ -1,10 +1,13 @@
 """Load or reload offices and people from a CSV (R8, AD-9).
 
-    python -m roombooker.seed <file.csv>
+    python -m roombooker.seed <file.csv> [--demo-bookings]
 
 Columns: email, name, office, office_manager. People are matched on email; anyone
 missing from the file is marked inactive and keeps their id. Offices are created by
 name and never deleted. The whole file loads in one transaction, or nothing does.
+
+`--demo-bookings` then adds demo rooms and this week's and next week's bookings
+(`roombooker.demo`). It needs the build seed's people; never use it with HR's list.
 """
 
 import argparse
@@ -16,6 +19,7 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from roombooker import demo
 from roombooker.core.db import get_engine
 from roombooker.people import store
 
@@ -101,6 +105,11 @@ def load(path: Path) -> store.LoadResult:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m roombooker.seed", description=__doc__.split("\n")[0])
     parser.add_argument("csv_file", type=Path, help="CSV with columns " + ", ".join(COLUMNS))
+    parser.add_argument(
+        "--demo-bookings",
+        action="store_true",
+        help="then add demo rooms and bookings for this week and next (build seed only)",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -124,6 +133,27 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     for person_id in result.deactivated_ids:
         log.info("seed: marked inactive person_id=%d", person_id)
+    if args.demo_bookings:
+        return _load_demo()
+    return 0
+
+
+def _load_demo() -> int:
+    try:
+        with Session(get_engine()) as session:
+            result = demo.load_demo(session)
+    except demo.DemoError as exc:
+        log.error("seed: people loaded, but no demo rooms or bookings written")
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    log.info(
+        "seed: demo rooms %d added, %d already there; demo bookings %d added, "
+        "%d skipped (slot already taken)",
+        result.rooms_added,
+        result.rooms_kept,
+        result.bookings_added,
+        result.bookings_skipped,
+    )
     return 0
 
 

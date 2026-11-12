@@ -99,14 +99,16 @@ def can_see_attendees(person: Person, organiser_id: int, office_id: int, attende
     )
 
 
-def check_slot(start_at: datetime, length_minutes: int) -> datetime:
-    """The slot's end, or InvalidBooking: on a quarter hour, 15 min to 4 h, from now to 90 days."""
+def check_slot(start_at: datetime, length_minutes: int, allow_past: bool = False) -> datetime:
+    """The slot's end, or InvalidBooking: on a quarter hour, 15 min to 4 h, from now to 90 days.
+
+    `allow_past` lifts only the "from now" rule, for the seed's demo bookings."""
     if start_at.second or start_at.microsecond or start_at.minute % STEP_MINUTES:
         raise InvalidBooking(NOT_ON_QUARTER)
     if not LENGTH_MIN <= length_minutes <= LENGTH_MAX or length_minutes % STEP_MINUTES:
         raise InvalidBooking(BAD_LENGTH)
     now = clock.utc_now()
-    if start_at < now:
+    if start_at < now and not allow_past:
         raise InvalidBooking(IN_THE_PAST)
     if start_at > now + timedelta(days=DAYS_AHEAD):
         raise InvalidBooking(TOO_FAR_AHEAD)
@@ -253,11 +255,13 @@ def book(
     length_minutes: int,
     title: str,
     attendee_ids: list[int],
+    allow_past: bool = False,
 ) -> BookingView:
     """Book a room for the actor. The trigger is the guarantee against overlaps and
-    closed rooms, even when two people book at once (AD-4)."""
+    closed rooms, even when two people book at once (AD-4). Only the seed's demo
+    bookings pass `allow_past`; the web never does."""
     room = rooms_service.find_room(session, room_id)
-    end_at = check_slot(start_at, length_minutes)
+    end_at = check_slot(start_at, length_minutes, allow_past)
     clean_title = _clean_title(title)
     attendees = []
     for person_id in dict.fromkeys(attendee_ids):  # keep order, drop repeats

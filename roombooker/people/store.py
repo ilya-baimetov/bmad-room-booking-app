@@ -70,6 +70,10 @@ def search_active(session: Session, text: str, limit: int) -> Sequence[Row]:
     return matches[:limit]
 
 
+def all_active(session: Session) -> Sequence[Row]:
+    return session.execute(_person_select().where(people.c.active.is_(True))).all()
+
+
 def get_person(session: Session, person_id: int) -> Row | None:
     return session.execute(_person_select().where(people.c.id == person_id)).first()
 

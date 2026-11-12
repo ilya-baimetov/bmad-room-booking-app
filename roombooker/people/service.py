@@ -61,6 +61,11 @@ def get_active_person(session: Session, person_id: int) -> Person | None:
     return _to_person(row)
 
 
+def active_people_by_email(session: Session) -> dict[str, Person]:
+    """{email: person} for everyone active (emails are stored lower-cased)."""
+    return {row.email: _to_person(row) for row in store.all_active(session)}
+
+
 def names(session: Session, person_ids) -> dict[int, str]:
     """{id: name} for these people, including inactive ones (who keep their bookings)."""
     return store.names(session, person_ids)
