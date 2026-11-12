@@ -3,7 +3,7 @@ title: 'Pick and switch your name, end to end'
 type: feature
 ticket: '1'
 created: '2026-11-12'
-status: built
+status: done
 baseline_revision: '8a7db0e4b6c56313d521288e41b0d711f7bee930'
 route: full
 route_source: auto
