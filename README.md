@@ -1,11 +1,5 @@
 # room-booker
 
-> **An example app for the BMad docs walkthroughs.** BMad skills in Claude Code built all of it: the planning documents through *Walk Through Three Routes*, Part 3, and the rest through quick builds. A reader agent typed each prompt; no code was written by hand.
->
-> - [`walkthrough-log/`](walkthrough-log/README.md) has every step: what was typed, what the agent did and replied, wall time and cost. Raw session logs are on the [`transcripts`](https://github.com/ilya-baimetov/bmad-room-booking-app/tree/transcripts) branch.
-> - Each story build has its own [pull request](https://github.com/ilya-baimetov/bmad-room-booking-app/pulls?q=is%3Apr+is%3Amerged).
-> - The [`brownfield-start`](https://github.com/ilya-baimetov/bmad-room-booking-app/tree/brownfield-start) tag is this app with every BMad file removed: the starting point for *Walk Through an Existing Codebase*.
-
 Company Room Booking: internal room booking for the London, Manchester and Leeds offices.
 One FastAPI app, one SQLite file, server-rendered pages with htmx.
 
