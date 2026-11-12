@@ -1,0 +1,4 @@
+[workflow]
+persistent_facts = [
+  "Test policy: one test per distinct behavior. Merge rows of the I/O and edge-case matrix that would need the same test, and say in the plan's test task that no test may repeat what another test already proves.",
+]
