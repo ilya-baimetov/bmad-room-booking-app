@@ -1,0 +1,20 @@
+{% if not q %}
+<p class="hint">Start typing your name.</p>
+{% elif not people %}
+<p class="hint">No one called “{{ q }}”.</p>
+{% else %}
+<ul class="people-list">
+  {% for p in people %}
+  <li>
+    <form method="post" action="/pick-name">
+      <input type="hidden" name="person_id" value="{{ p.id }}">
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="person-button" type="submit">
+        <span class="person-name">{{ p.name }}</span>
+        <span class="person-office">{{ p.home_office_name }}</span>
+      </button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}

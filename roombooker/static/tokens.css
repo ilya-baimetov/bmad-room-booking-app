@@ -1,0 +1,76 @@
+/* Every DESIGN.md token as a CSS custom property. Change values here, not in app.css. */
+:root {
+  /* colors */
+  --color-navy: #1B2A4A;
+  --color-navy-hover: #2A3D66;
+  --color-navy-tint: #E8ECF4;
+  --color-white: #FFFFFF;
+  --color-ink: #1B2A4A;
+  --color-ink-muted: #5B6474;
+  --color-border: #D5DAE3;
+  --color-closed: #F2F3F5;
+  --color-error: #B42318;
+  --color-error-tint: #FDECEA;
+
+  /* typography */
+  --font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-title-size: 20px;
+  --font-title-weight: 600;
+  --font-title-line-height: 1.3;
+  --font-body-size: 16px;
+  --font-body-weight: 400;
+  --font-body-line-height: 1.5;
+  --font-label-size: 14px;
+  --font-label-weight: 600;
+  --font-label-line-height: 1.4;
+  --font-meta-size: 14px;
+  --font-meta-weight: 400;
+  --font-meta-line-height: 1.4;
+
+  /* shapes */
+  --rounded-sm: 4px;
+  --rounded-md: 8px;
+
+  /* spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --touch-target: 44px;
+
+  /* components */
+  --top-bar-background: var(--color-navy);
+  --top-bar-foreground: var(--color-white);
+  --button-primary-background: var(--color-navy);
+  --button-primary-foreground: var(--color-white);
+  --button-primary-hover: var(--color-navy-hover);
+  --button-primary-radius: var(--rounded-md);
+  --button-primary-min-height: var(--touch-target);
+  --button-secondary-background: var(--color-white);
+  --button-secondary-foreground: var(--color-navy);
+  --button-secondary-border: var(--color-navy);
+  --button-secondary-radius: var(--rounded-md);
+  --button-secondary-min-height: var(--touch-target);
+  --slot-free-background: var(--color-white);
+  --slot-free-foreground: var(--color-ink-muted);
+  --slot-free-border: var(--color-border);
+  --slot-booked-background: var(--color-navy-tint);
+  --slot-booked-foreground: var(--color-ink);
+  --slot-booked-radius: var(--rounded-sm);
+  --slot-mine-background: var(--color-navy);
+  --slot-mine-foreground: var(--color-white);
+  --slot-mine-radius: var(--rounded-sm);
+  --slot-closed-background: var(--color-closed);
+  --slot-closed-foreground: var(--color-ink-muted);
+  --room-row-background: var(--color-white);
+  --room-row-border: var(--color-border);
+  --room-row-radius: var(--rounded-md);
+  --room-row-min-height: var(--touch-target);
+  --booking-sheet-background: var(--color-white);
+  --booking-sheet-radius: var(--rounded-md);
+  --error-message-background: var(--color-error-tint);
+  --error-message-foreground: var(--color-error);
+  --error-message-radius: var(--rounded-sm);
+}

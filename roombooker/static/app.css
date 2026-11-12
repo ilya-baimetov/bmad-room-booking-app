@@ -1,0 +1,245 @@
+/* Layout and components. Values come from tokens.css. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-family: var(--font-family);
+  font-size: var(--font-body-size);
+  font-weight: var(--font-body-weight);
+  line-height: var(--font-body-line-height);
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-navy-hover);
+  outline-offset: 2px;
+}
+
+/* top bar */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: calc(var(--touch-target) + 2 * var(--space-2));
+  padding: var(--space-2) var(--space-4);
+  background: var(--top-bar-background);
+  color: var(--top-bar-foreground);
+}
+
+.top-bar a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  text-decoration: none;
+}
+
+.top-bar :focus-visible {
+  outline-color: var(--color-white);
+}
+
+.app-name {
+  flex: none;
+  font-size: var(--font-title-size);
+  font-weight: var(--font-title-weight);
+  line-height: var(--font-title-line-height);
+}
+
+.current-person {
+  min-width: 0;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: var(--rounded-md);
+}
+
+.current-person:hover {
+  background: var(--color-navy-hover);
+}
+
+.current-person-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: var(--font-label-weight);
+}
+
+.switch-hint {
+  flex: none;
+  font-size: var(--font-meta-size);
+  line-height: var(--font-meta-line-height);
+  text-decoration: underline;
+}
+
+/* page */
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+}
+
+.announce:empty {
+  display: none;
+}
+
+.announce {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.notice {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-navy-tint);
+  border-radius: var(--rounded-sm);
+}
+
+.title {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-title-size);
+  font-weight: var(--font-title-weight);
+  line-height: var(--font-title-line-height);
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+  line-height: var(--font-label-line-height);
+}
+
+.meta,
+.hint {
+  color: var(--color-ink-muted);
+  font-size: var(--font-meta-size);
+  line-height: var(--font-meta-line-height);
+}
+
+.meta {
+  margin: calc(-1 * var(--space-3)) 0 var(--space-4);
+}
+
+.hint {
+  margin: var(--space-4) 0;
+}
+
+.lead {
+  margin: 0;
+}
+
+/* controls */
+.input {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--rounded-md);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--font-body-size);
+}
+
+.input:focus-visible {
+  border-color: var(--color-navy);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  font: inherit;
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+  cursor: pointer;
+}
+
+.button-primary {
+  min-height: var(--button-primary-min-height);
+  border: 1px solid var(--button-primary-background);
+  border-radius: var(--button-primary-radius);
+  background: var(--button-primary-background);
+  color: var(--button-primary-foreground);
+}
+
+.button-primary:hover {
+  background: var(--button-primary-hover);
+}
+
+.button-secondary {
+  min-height: var(--button-secondary-min-height);
+  border: 1px solid var(--button-secondary-border);
+  border-radius: var(--button-secondary-radius);
+  background: var(--button-secondary-background);
+  color: var(--button-secondary-foreground);
+}
+
+/* pick your name */
+.search-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.people-list {
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.people-list li + li {
+  margin-top: var(--space-2);
+}
+
+.people-list form {
+  margin: 0;
+}
+
+.person-button {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-3);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--rounded-md);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.person-button:hover {
+  border-color: var(--color-navy);
+  background: var(--color-navy-tint);
+}
+
+.person-name {
+  font-weight: var(--font-label-weight);
+}
+
+.person-office {
+  color: var(--color-ink-muted);
+  font-size: var(--font-meta-size);
+  line-height: var(--font-meta-line-height);
+}

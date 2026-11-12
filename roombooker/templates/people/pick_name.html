@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Pick your name{% endblock %}
+{% block announce %}{% if gone %}<p class="notice">That name is no longer in the list. Pick yours again.</p>{% endif %}{% endblock %}
+{% block content %}
+<h1 class="title">Pick your name</h1>
+<form class="search" method="get" action="/pick-name" role="search">
+  <label class="label" for="q">Your name</label>
+  <div class="search-row">
+    <input id="q" class="input" name="q" type="search" value="{{ q }}"
+           autocomplete="off" autocapitalize="words" spellcheck="false" autofocus
+           aria-controls="results"
+           hx-get="/pick-name" hx-trigger="input changed delay:200ms, search"
+           hx-target="#results" hx-swap="innerHTML" hx-sync="this:replace"
+           hx-include="closest form">
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="button button-secondary" type="submit">Search</button>
+  </div>
+</form>
+<div id="results" class="results" aria-live="polite">
+  {% include "people/_results.html" %}
+</div>
+{% endblock %}
