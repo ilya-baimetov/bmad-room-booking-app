@@ -47,9 +47,9 @@ Staff see the rooms they organise or attend in their own calendar app without re
 
 - Out: signing in to Microsoft or Google, syncing anything back, and booking, changing or cancelling from a calendar app.
 - Out: a downloaded file updating itself; the feed is how a calendar stays current.
-- Touch point: bookings — reads the bookings a person organises or attends; not yet sliced, no epic.
-- Touch point: people — each person's feed secret and its reset (a new migration); not yet sliced, no epic.
-- Touch point: calendar — My bookings shows the feed address; the booking details page offers Add to calendar; not yet sliced, no epic.
+- Touch point: bookings — the booking details page offers Add to calendar; the bookings a person organises or attends feed the feed; owner: stories 1 and 2.
+- Touch point: people — each person's feed secret and its reset (a new migration); owner: story 2.
+- Touch point: calendar — My bookings shows the feed address and its reset; owner: story 2.
 - Must not change: how bookings are made, the overlap rules, or what My bookings lists today.
 - Tracer path: a person copies their feed address from My bookings, subscribes in their calendar app, books a room, and sees it appear after the app refreshes.
 
@@ -62,6 +62,7 @@ Staff see the rooms they organise or attend in their own calendar app without re
 
 ## Notes
 
+- Open question: Is the room booker reachable from the internet? Google Calendar and Outlook on the web fetch subscribed feeds from their own servers, so if it is internal only, R2 cannot be met for those two without dropping them or making the feed reachable. Does not block building story 2, only its three-app check; Ilya to answer.
 - Decision: (2026-11-13) The feed covers bookings from 30 days ago onward, with no upper limit.
 - Decision: (2026-11-13) Each event shows the booking title, start and end, the room and office as location, and the organiser.
 - Decision: (2026-11-13) A cancelled booking simply disappears from the feed; no cancelled events are kept or shown.
@@ -70,3 +71,6 @@ Staff see the rooms they organise or attend in their own calendar app without re
 - Decision: (2026-11-13) A downloaded .ics file is a snapshot and does not change when the booking later changes; the feed is the way to stay current.
 - Decision: (2026-11-13) When a person is made inactive their feed address stops returning bookings.
 - Decision: (2026-11-13) Room-wide or office-wide calendars (for office managers or room displays) are out of this initiative.
+- Decision: (2026-11-13) Sliced straight into stories with no epics, as few as possible, each one build session (the user's call).
+- Decision: (2026-11-13) Story 1, the Add to calendar download, is the tracer bullet: it settles the iCalendar event format and UK-time handling that story 2's feed reuses, so story 2 waits on it.
+- Decision: (2026-11-13) No refactor sweep or closing end-to-end story: two entries is under the threshold for either.

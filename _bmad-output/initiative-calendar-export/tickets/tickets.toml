@@ -1,0 +1,23 @@
+# The initiative's stories, no epics (Decision 2026-11-13). Table order is build order.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Add to calendar downloads a booking as an .ics file"
+description = "A booking's details page offers Add to calendar, which downloads that booking as one standard iCalendar event (title, start and end, room and office as location, organiser); it settles the event format story 2 reuses for the feed."
+verify = "Tests check the downloaded event's fields and UTC times for one GMT and one BST booking; a person imports the file into Outlook, Google Calendar and Apple Calendar and sees one event at the right UK time."
+covers = ["R1", "C3"]
+after = []
+hitl = true # a person imports the file into the three calendar apps
+risk = "medium"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Each person subscribes to a private feed of their bookings and can reset its address"
+description = "Each person gets a secret feed address, shown with a copy and a reset on My bookings, that serves their organised and attended bookings from 30 days ago onward without the Pick your name cookie, using story 1's event format; a reset, an unknown address or an inactive person returns no bookings."
+verify = "Tests show the feed lists the person's bookings with no cookie, drops a cancelled booking and one deleted by a room closing, and refuses an old, unknown or inactive person's address; a person subscribes in Outlook, Google Calendar and Apple Calendar, then sees a new booking, an edit and a cancellation after each app refreshes."
+covers = ["R2", "R3", "R4", "R5", "R6", "C4"]
+after = [1] # reuses story 1's event format
+hitl = true # a person subscribes in the three calendar apps
+risk = "high"
