@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}My bookings{% endblock %}
+{% block announce %}{% if notice %}<p class="notice">{{ notice }}</p>{% endif %}{% endblock %}
 {% block content %}
 <h1 class="title">My bookings</h1>
 <nav class="calendar-nav" aria-label="Calendar">
@@ -46,4 +47,21 @@
   {% endfor %}
 </div>
 {% endif %}
+
+<section class="feed" aria-labelledby="feed-heading">
+  <h2 class="subtitle" id="feed-heading">Calendar feed</h2>
+  {% if feed_url %}
+  <label class="label" for="feed-url">Your private feed address</label>
+  <input class="input" id="feed-url" type="text" value="{{ feed_url }}" readonly onfocus="this.select()" spellcheck="false" autocomplete="off">
+  <p class="hint">Paste it into Outlook, Google Calendar or Apple Calendar as a calendar to subscribe to from a URL. Changes to your bookings show there after the app next refreshes. Keep the address to yourself: anyone who has it can see your bookings.</p>
+  <div class="form-actions">
+    <a class="button button-secondary" href="/my-bookings/feed/reset">Reset address</a>
+  </div>
+  {% else %}
+  <p class="hint">Get a private address that keeps Outlook, Google Calendar or Apple Calendar up to date with your bookings.</p>
+  <form method="post" action="/my-bookings/feed">
+    <button class="button button-secondary" type="submit">Create feed address</button>
+  </form>
+  {% endif %}
+</section>
 {% endblock %}

@@ -53,6 +53,13 @@ Closing a room cancels its bookings that have not started yet.
 **Previous** and **Next** step a day or a week; **Today** comes back to now, and today is
 highlighted. On a phone the week is a list of days. Tap a booking to open it.
 
+Under **Calendar feed**, **Create feed address** gives you a private `/feeds/<token>.ics` address
+to subscribe to from Outlook, Google Calendar or Apple Calendar; **Reset address** replaces it and
+the old one stops working. The address is built from the host the request came to, so behind a TLS
+proxy run `uv run uvicorn roombooker.app:app --proxy-headers` (and set `--forwarded-allow-ips` to
+the proxy's address if it is not on the same machine), or addresses will start `http://` with the
+app's internal host.
+
 ## Demo bookings
 
 `--demo-bookings` on the seed command adds demo data after loading people, so the app has something

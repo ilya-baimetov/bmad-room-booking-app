@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Reset feed address{% endblock %}
+{% block content %}
+<h1 class="title">Reset feed address</h1>
+<form class="confirm" method="post" action="/my-bookings/feed">
+  <input type="hidden" name="replace" value="1">
+  <p class="confirm-question">Reset your calendar feed address? The current address stops working, and calendars subscribed to it stop updating until you subscribe to the new one.</p>
+  <div class="form-actions">
+    <button class="button button-secondary" type="submit">Reset address</button>
+    <a class="button button-secondary" href="/my-bookings" autofocus>Keep address</a>
+  </div>
+</form>
+{% endblock %}

@@ -42,7 +42,7 @@ def test_one_event_with_utc_times_and_no_attendees():
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
         "BEGIN:VEVENT",
-        "UID:booking-7@roombooker",
+        "UID:booking-7-f541562a@roombooker",  # sha256("1\n<start>\n<end>\nPlanning")[:8]
         "DTSTAMP:20261113T083000Z",
         "DTSTART:20261124T100000Z",
         "DTEND:20261124T110000Z",

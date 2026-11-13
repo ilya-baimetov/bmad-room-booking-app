@@ -1,0 +1,3 @@
+- source_plan: `_bmad-output/initiative-calendar-export/tickets/story-each-person-subscribes-to-a-private-feed-of-their-bookings-a-plan.md`
+  summary: A form POST sent without a valid cookie goes to Pick your name and comes back as a GET on a POST-only path, which ends on 405 Method Not Allowed.
+  evidence: `core/identity.py` `current_person` raises `NeedsPerson(path_with_query(request))` for any method. Affects `POST /bookings`, `POST /manage-rooms/{id}`, `POST /manage-rooms/{id}/reopen` and the new `POST /my-bookings/feed`. Cancel and close already have a GET on the same path. Fix app-wide, e.g. send POSTs back to a safe page.

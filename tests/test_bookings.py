@@ -514,7 +514,8 @@ def test_add_to_calendar_downloads_a_gmt_booking(client, act, room, ids, insert_
     )
     lines = ics_lines(response.text)
     assert lines.count("BEGIN:VEVENT") == 1
-    assert "METHOD:PUBLISH" in lines and f"UID:booking-{new_id}@roombooker" in lines
+    assert "METHOD:PUBLISH" in lines
+    assert any(re.fullmatch(rf"UID:booking-{new_id}-[0-9a-f]{{8}}@roombooker", ln) for ln in lines)
     assert "DTSTART:20270112T100000Z" in lines and "DTEND:20270112T110000Z" in lines
     assert "SUMMARY:Planning" in lines and r"LOCATION:Snug\, London" in lines
     assert "DESCRIPTION:Booked by Hannah Okafor" in lines

@@ -1,14 +1,19 @@
-"""People rules: who is active, finding people by name, and who manages an office.
+"""People rules: who is active, finding people by name, who manages an office, and each
+person's secret calendar feed token.
 
 Must never import `core.identity` (it imports this module).
 """
 
+import logging
+import secrets
 from dataclasses import dataclass
 
 from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
 from roombooker.people import store
+
+log = logging.getLogger("roombooker.people")
 
 SEARCH_LIMIT = 20
 
@@ -74,3 +79,24 @@ def names(session: Session, person_ids) -> dict[int, str]:
 def office_names(session: Session) -> dict[int, str]:
     """{office id: office name}."""
     return store.office_names(session)
+
+
+def feed_token(session: Session, person: Person) -> str | None:
+    """The person's calendar feed token, or None until they create one."""
+    return store.feed_token(session, person.id)
+
+
+def new_feed_token(session: Session, person: Person) -> str:
+    """Give the person a new random feed token, replacing (and so retiring) any earlier
+    one, and commit. 32 random bytes: 43 URL-safe characters."""
+    token = secrets.token_urlsafe(32)
+    store.set_feed_token(session, person.id, token)
+    session.commit()
+    log.info("people: person_id=%d new feed token", person.id)  # never log the token
+    return token
+
+
+def person_for_feed_token(session: Session, token: str) -> Person | None:
+    """The active person whose feed token this is, or None (unknown, replaced or inactive)."""
+    row = store.active_by_feed_token(session, token)
+    return None if row is None else _to_person(row)

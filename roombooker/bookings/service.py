@@ -8,7 +8,7 @@ and closed rooms (AD-4); this module turns their aborts into `BookingConflict` a
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import Row
 from sqlalchemy.exc import IntegrityError
@@ -30,6 +30,9 @@ LENGTH_MAX = 4 * 60
 DAYS_AHEAD = 90
 TITLE_MAX_LENGTH = 100
 UPCOMING_LIMIT = 20
+FEED_DAYS_BACK = 30
+FEED_NAME = "Room bookings"
+FEED_END = datetime(9999, 12, 31, 23, 59, tzinfo=UTC)
 SQLITE_MAX_INTEGER = 2**63 - 1
 
 NOT_ON_QUARTER = "Bookings start on the hour or at 15, 30 or 45 minutes past."
@@ -277,6 +280,14 @@ def booking_calendar(session: Session, viewer: Person, booking_id: int) -> str:
     """One booking as an iCalendar file's text, for anyone who may look at it.
     No attendees are written, whoever the viewer is."""
     return ical.calendar([get_booking(session, viewer, booking_id)], clock.utc_now())
+
+
+def feed_calendar(session: Session, person: Person) -> str:
+    """The person's subscribed feed: the bookings they organise or attend that end after
+    30 days ago, as a named iCalendar text. No attendees are written."""
+    now = clock.utc_now()
+    events = bookings_for_person(session, person, now - timedelta(days=FEED_DAYS_BACK), FEED_END)
+    return ical.calendar(events, now, name=FEED_NAME)
 
 
 def _clean_title(title: str) -> str:

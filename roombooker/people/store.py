@@ -40,6 +40,7 @@ people = Table(
     Column("home_office_id", Integer, ForeignKey("offices.id"), nullable=False),
     Column("is_office_manager", Boolean, nullable=False, default=False),
     Column("active", Boolean, nullable=False, default=True),
+    Column("feed_token", String, nullable=True, unique=True),  # secret calendar feed address
 )
 
 _person_columns = (
@@ -89,6 +90,24 @@ def names(session: Session, person_ids: Iterable[int]) -> dict[int, str]:
 
 def office_names(session: Session) -> dict[int, str]:
     return {row.id: row.name for row in session.execute(select(offices.c.id, offices.c.name))}
+
+
+def feed_token(session: Session, person_id: int) -> str | None:
+    return session.execute(
+        select(people.c.feed_token).where(people.c.id == person_id)
+    ).scalar_one_or_none()
+
+
+def active_by_feed_token(session: Session, token: str) -> Row | None:
+    """The active person whose feed address holds this token, or None."""
+    return session.execute(
+        _person_select().where(people.c.feed_token == token, people.c.active.is_(True))
+    ).first()
+
+
+def set_feed_token(session: Session, person_id: int, token: str) -> None:
+    """Give the person this feed token, replacing any earlier one. Does not commit."""
+    session.execute(update(people).where(people.c.id == person_id).values(feed_token=token))
 
 
 # --- writes, used only by the seed CLI (AD-3, AD-9) ---------------------------
