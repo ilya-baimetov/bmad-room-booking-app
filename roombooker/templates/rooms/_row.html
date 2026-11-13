@@ -2,6 +2,11 @@
   <td class="room-name">{{ room.name }}</td>
   <td class="room-capacity" data-label="Capacity">{{ room.capacity }}</td>
   <td class="room-status">{{ room.status }}</td>
+  {% if room.has_tablet %}
+  <td class="room-tablet" data-label="Door tablet:">Since {{ room.tablet_since | short_date }}</td>
+  {% else %}
+  <td class="room-tablet">No door tablet</td>
+  {% endif %}
   <td class="room-actions">
     <a class="button button-secondary" href="/manage-rooms/{{ room.id }}/edit"
        hx-get="/manage-rooms/{{ room.id }}/edit" hx-target="closest tr" hx-swap="outerHTML">Edit<span class="visually-hidden"> {{ room.name }}</span></a>
@@ -13,6 +18,12 @@
     {% else %}
     <a class="button button-secondary" href="/manage-rooms/{{ room.id }}/close"
        hx-get="/manage-rooms/{{ room.id }}/close" hx-target="closest tr" hx-swap="outerHTML">Close<span class="visually-hidden"> {{ room.name }}</span></a>
+    {% endif %}
+    <a class="button button-secondary" href="/manage-rooms/{{ room.id }}/tablet"
+       hx-get="/manage-rooms/{{ room.id }}/tablet" hx-target="closest tr" hx-swap="outerHTML">Set up door tablet<span class="visually-hidden"> for {{ room.name }}</span></a>
+    {% if room.has_tablet %}
+    <a class="button button-secondary" href="/manage-rooms/{{ room.id }}/tablet/remove"
+       hx-get="/manage-rooms/{{ room.id }}/tablet/remove" hx-target="closest tr" hx-swap="outerHTML">Remove tablet<span class="visually-hidden"> from {{ room.name }}</span></a>
     {% endif %}
   </td>
 </tr>

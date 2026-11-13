@@ -3,14 +3,14 @@ title: 'Office managers set up a door tablet and people check in at it'
 type: feature
 ticket: '1'
 created: '2026-11-13'
-status: ready-for-dev
-baseline_revision: ''
+status: built
+baseline_revision: '47c0ac1f4241f2fc33d8f4272faa6426c24245ec'
 route: full
 route_source: auto
 risk: medium
-review: ''
-review_source: ''
-lenses_ran: []
+review: quick
+review_source: pinned
+lenses_ran: [quick]
 review_loop_iteration: 0
 context:
   - '{project-root}/_bmad-output/initiative-check-in/tickets/epic-check-in-or-lose-the-room/epic-check-in-or-lose-the-room.md'
@@ -79,9 +79,25 @@ context:
 
 ## Implementation Notes
 
+- Implemented directly in the main session, not by a subagent: subagents need the user's explicit go-ahead in this environment.
+- The Door tablet cell reads "Since 13 Nov" or "No door tablet": the frozen matrix's wording governs over the Tasks line's "None" (changed at review). On phones only "Since …" gets the label "Door tablet:".
+- Wording not fixed by the plan or UX: "Check-in opens at {start − 5}." before the window; "This booking can't be checked in here." for an untracked booking; the closed-window refusal uses EXPERIENCE.md's "Check-in closed at {start + 15}." without "This booking was freed." (no freed wording in this story). Setup confirm's dismiss link is "Not now"; remove confirm's is "Keep tablet".
+- `rooms.store.begin_immediate` mirrors `bookings.store`'s, so two setups of one room take turns rather than one failing on the partial unique index.
+- `Room.tablet_since` is filled by every `rooms.service` read, so rows returned after close, reopen and remove show the tablet column correctly.
+- `identity._forget_person` became public `forget_person` for the setup response.
+
 ## Plan Change Log
 
 ## Review Triage Log
+
+Lens `quick`, 2026-11-13, iteration 0.
+
+| # | Location | Finding | Verdict | Evidence | Route |
+|---|----------|---------|---------|----------|-------|
+| 1 | `rooms/web.py` `remove_tablet`, `rooms/service.py` `remove_tablet` | Removing when no tablet is active still shows "Removed the door tablet from {room}." | low | Real: `remove_active_tablet` returns None and the notice is sent anyway. The room ends with no tablet, as the manager asked; reached only by a repeat post or a stale confirm. The fix needs a new return value and branch. | rejected (low, unlikely, fix adds complexity) |
+| 2 | `rooms/service.py` `set_up_tablet` | Replacing setup writes two log lines | false | The convention is one line per setup and per removal; a replacement is both events, each logged once with ids only. | rejected |
+| 3 | `templates/rooms/_row.html` | Row says "None", frozen matrix says "No door tablet" | low | Real: the frozen matrix's Remove row names "No door tablet"; Tasks said "None". The frozen intent governs. A one-string template change. | patch: fixed |
+| 4 | `bookings/service.py` `check_in` | A tablet replaced between token resolution and the lock can still check in once | low | Real but needs a replacement in the same instant as a tap at that room's door; replacement keeps coverage contiguous, so the booking is tracked either way. The fix needs the token passed into the service and re-checked under the lock. | rejected (low, unlikely, fix adds a parameter and a guard) |
 
 ## Design Notes
 

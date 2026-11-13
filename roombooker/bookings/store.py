@@ -7,7 +7,18 @@ text `YYYY-MM-DDTHH:MM:00Z`, so text order is time order (AD-5).
 
 from collections.abc import Iterable, Sequence
 
-from sqlalchemy import Column, ForeignKey, Integer, MetaData, Row, String, Table, delete, select
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    MetaData,
+    Row,
+    String,
+    Table,
+    delete,
+    select,
+    update,
+)
 from sqlalchemy import insert as sa_insert
 from sqlalchemy.orm import Session
 
@@ -22,6 +33,8 @@ bookings = Table(
     Column("title", String, nullable=False),
     Column("start_at", String, nullable=False),
     Column("end_at", String, nullable=False),
+    Column("checked_in_at", String, nullable=True),
+    Column("freed_at", String, nullable=True),  # CHECK: not both set, in the database
 )
 
 booking_attendees = Table(
@@ -78,6 +91,28 @@ def for_person(session: Session, person_id: int, start_at: str, end_at: str) -> 
         )
         .order_by(bookings.c.start_at, bookings.c.id)
     ).all()
+
+
+def in_room(session: Session, room_id: int, start_at: str, end_at: str) -> Sequence[Row]:
+    """The room's bookings overlapping [start_at, end_at), in start order."""
+    return session.execute(
+        select(bookings)
+        .where(
+            bookings.c.room_id == room_id,
+            bookings.c.start_at < end_at,
+            bookings.c.end_at > start_at,
+        )
+        .order_by(bookings.c.start_at, bookings.c.id)
+    ).all()
+
+
+def set_checked_in(session: Session, booking_id: int, at: str) -> None:
+    """Record a check-in; a booking already checked in keeps its first time."""
+    session.execute(
+        update(bookings)
+        .where(bookings.c.id == booking_id, bookings.c.checked_in_at.is_(None))
+        .values(checked_in_at=at)
+    )
 
 
 def get(session: Session, booking_id: int) -> Row | None:

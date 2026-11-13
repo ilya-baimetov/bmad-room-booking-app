@@ -99,6 +99,12 @@ def day(moment: datetime) -> str:
     return f"{local:%a} {local.day} {local:%b}"
 
 
+def short_date(moment: datetime) -> str:
+    """`13 Nov`, in UK time."""
+    local = moment.astimezone(UK)
+    return f"{local.day} {local:%b}"
+
+
 def length_label(minutes: int) -> str:
     """`15 min`, `1 h`, `1 h 45 min`."""
     hours, rest = divmod(minutes, 60)

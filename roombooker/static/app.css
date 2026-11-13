@@ -485,7 +485,20 @@ a.button {
     content: attr(data-label) " ";
   }
 
-  .room-row.is-closed .room-capacity {
+  .room-tablet {
+    flex-basis: 100%;
+    order: 3;
+    color: var(--color-ink-muted);
+    font-size: var(--font-meta-size);
+    line-height: var(--font-meta-line-height);
+  }
+
+  .room-tablet[data-label]::before {
+    content: attr(data-label) " ";
+  }
+
+  .room-row.is-closed .room-capacity,
+  .room-row.is-closed .room-tablet {
     color: inherit;
   }
 

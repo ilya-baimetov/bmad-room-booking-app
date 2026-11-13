@@ -1,9 +1,15 @@
-"""Bookings rules: free rooms, booking, seeing and cancelling bookings.
+"""Bookings rules: free rooms, booking, seeing and cancelling bookings, the door page and
+checking in.
 
 The only writer of `bookings` and `booking_attendees` (AD-3). Works in aware UTC
 datetimes; the web layer converts UK time (AD-5). The database triggers refuse overlaps
 and closed rooms (AD-4); this module turns their aborts into `BookingConflict` and
 `RoomClosed`. Attendees are filled in only for the viewers AD-8 allows.
+
+A booking's check-in window is [start − CHECK_IN_OPENS, start + FREED_AFTER). Its
+check-in state lives only here and is carried on `BookingView`: templates render it and
+never recompute it. A booking is tracked only when its room's door tablet periods (from
+`rooms.service`) cover its whole window.
 """
 
 import logging
@@ -20,9 +26,17 @@ from roombooker.core.errors import DomainError, NotAllowed
 from roombooker.people import service as people_service
 from roombooker.people.service import Person, can_manage_office
 from roombooker.rooms import service as rooms_service
-from roombooker.rooms.service import Room
+from roombooker.rooms.service import Room, TabletPeriod
 
 log = logging.getLogger("roombooker.bookings")
+
+CHECK_IN_OPENS = timedelta(minutes=5)  # before the start
+FREED_AFTER = timedelta(minutes=15)  # after the start: the window closes then
+
+UNTRACKED = "untracked"  # no tablet covered (or covers) the whole window
+AWAITING = "awaiting"
+CHECKED_IN = "checked_in"
+FREED = "freed"
 
 STEP_MINUTES = 15
 LENGTH_MIN = 15
@@ -44,6 +58,9 @@ TITLE_TOO_LONG = f"Titles can be up to {TITLE_MAX_LENGTH} characters."
 ATTENDEE_GONE = "One of the attendees is no longer in the people list. Pick them again."
 ONLY_ORGANISER = "Only the person who booked it can cancel it."
 ALREADY_ENDED = "That booking has already ended."
+CHECK_IN_NOT_OPEN = "Check-in opens at {}."
+CHECK_IN_CLOSED = "Check-in closed at {}."
+CHECK_IN_UNTRACKED = "This booking can't be checked in here."
 
 
 class InvalidBooking(DomainError):
@@ -80,6 +97,25 @@ class BookingView:
     attendees: tuple[str, ...]
     can_cancel: bool
     attendee_ids: tuple[int, ...] = ()
+    check_in: str = UNTRACKED  # UNTRACKED, AWAITING, CHECKED_IN or FREED (AD-7)
+    check_in_opens_at: datetime | None = None
+    freed_at: datetime | None = None
+    can_check_in: bool = False  # tracked, not checked in or freed, and the window is open
+
+    @property
+    def check_in_closes_at(self) -> datetime:
+        return self.start_at + FREED_AFTER
+
+
+@dataclass(frozen=True)
+class DoorPage:
+    """What a room's door tablet shows: today's bookings (UK day), soonest first, with
+    the current booking, or else the next one, marked."""
+
+    room: Room
+    bookings: tuple[BookingView, ...]
+    marked_id: int | None
+    marked_label: str | None  # "Now" or "Next"
 
 
 @dataclass(frozen=True)
@@ -148,11 +184,40 @@ def free_rooms(
     return groups
 
 
-def _views(session: Session, viewer: Person, rows: list[Row]) -> list[BookingView]:
+def _covered(periods: list[TabletPeriod], start_at: datetime) -> bool:
+    """Whether the tablet periods (in setup order; an active one has no end) cover the
+    whole check-in window [start − 5 min, start + 15 min) without a gap (AD-6)."""
+    cursor, closes = start_at - CHECK_IN_OPENS, start_at + FREED_AFTER
+    for set_up_at, removed_at in sorted(periods, key=lambda period: period[0]):
+        if set_up_at > cursor:
+            break  # a gap before this period
+        if removed_at is None or removed_at >= closes:
+            return True
+        cursor = max(cursor, removed_at)
+    return False
+
+
+def _check_in(row: Row, periods: list[TabletPeriod], now: datetime) -> tuple[str, bool]:
+    """The booking's check-in state and whether it can be checked in now (AD-7)."""
+    if row.freed_at is not None:
+        return FREED, False
+    if row.checked_in_at is not None:
+        return CHECKED_IN, False
+    start_at = clock.from_text(row.start_at)
+    if not _covered(periods, start_at):
+        return UNTRACKED, False
+    return AWAITING, start_at - CHECK_IN_OPENS <= now < start_at + FREED_AFTER
+
+
+def _views(session: Session, viewer: Person | None, rows: list[Row]) -> list[BookingView]:
+    """Rows as `viewer` may see them. No viewer (the door tablet) sees no attendees and
+    can cancel nothing."""
     if not rows:
         return []
     rooms = {room.id: room for room in rooms_service.all_rooms(session)}
     offices = people_service.office_names(session)
+    periods = rooms_service.tablet_periods(session, {row.room_id for row in rows})
+    now = clock.utc_now()
     attendees = {row.id: store.attendee_ids(session, row.id) for row in rows}
     names = people_service.names(
         session, {row.organiser_id for row in rows} | {i for ids in attendees.values() for i in ids}
@@ -160,13 +225,17 @@ def _views(session: Session, viewer: Person, rows: list[Row]) -> list[BookingVie
     views = []
     for row in rows:
         room = rooms[row.room_id]
-        visible = can_see_attendees(viewer, row.organiser_id, room.office_id, attendees[row.id])
+        visible = viewer is not None and can_see_attendees(
+            viewer, row.organiser_id, room.office_id, attendees[row.id]
+        )
+        start_at = clock.from_text(row.start_at)
+        check_in, can_check_in = _check_in(row, periods.get(row.room_id, []), now)
         views.append(
             BookingView(
                 id=row.id,
                 room=room,
                 office_name=offices[room.office_id],
-                start_at=clock.from_text(row.start_at),
+                start_at=start_at,
                 end_at=clock.from_text(row.end_at),
                 title=row.title,
                 organiser_id=row.organiser_id,
@@ -177,12 +246,16 @@ def _views(session: Session, viewer: Person, rows: list[Row]) -> list[BookingVie
                     if visible
                     else ()
                 ),
-                can_cancel=can_cancel_booking(viewer, row.organiser_id),
+                can_cancel=viewer is not None and can_cancel_booking(viewer, row.organiser_id),
                 attendee_ids=(
                     tuple(sorted(attendees[row.id], key=lambda i: (names[i].casefold(), i)))
                     if visible
                     else ()
                 ),
+                check_in=check_in,
+                check_in_opens_at=start_at - CHECK_IN_OPENS,
+                freed_at=clock.from_text(row.freed_at) if row.freed_at is not None else None,
+                can_check_in=can_check_in,
             )
         )
     return views
@@ -359,6 +432,63 @@ def booking_to_cancel(session: Session, actor: Person, booking_id: int) -> Booki
     if view.end_at <= clock.utc_now():
         raise InvalidBooking(ALREADY_ENDED)
     return view
+
+
+def door_page(session: Session, room: Room) -> DoorPage:
+    """The room's bookings for today (UK day), for its door tablet."""
+    today = clock.uk_now().date()
+    rows = store.in_room(
+        session,
+        room.id,
+        clock.to_text(clock.uk_midnight(today)),
+        clock.to_text(clock.uk_midnight(today + timedelta(days=1))),
+    )
+    views = _views(session, None, list(rows))
+    now = clock.utc_now()
+    current = next((v for v in views if v.start_at <= now < v.end_at), None)
+    upcoming = next((v for v in views if v.start_at > now), None)
+    marked, label = (current, "Now") if current else (upcoming, "Next")
+    return DoorPage(
+        room=room,
+        bookings=tuple(views),
+        marked_id=marked.id if marked else None,
+        marked_label=label if marked else None,
+    )
+
+
+def check_in(session: Session, room: Room, booking_id: int) -> BookingView:
+    """Check in one of the room's bookings from its door tablet, anonymously (AD-7).
+
+    Accepted from start − 5 min until start + 15 min, for a booking the room's tablets
+    cover; checking in again is a success that keeps the first time. Runs under the
+    write lock and decides on the row as re-read inside it (AD-2)."""
+    if _get_row(session, booking_id).room_id != room.id:
+        raise BookingNotFound()
+    store.begin_immediate(session)
+    try:
+        row = _get_row(session, booking_id)
+        now = clock.utc_now()
+        start_at = clock.from_text(row.start_at)
+        periods = rooms_service.tablet_periods(session, [room.id]).get(room.id, [])
+        state, can_check_in = _check_in(row, periods, now)
+        checked_in_now = state == AWAITING and can_check_in
+        if checked_in_now:
+            store.set_checked_in(session, booking_id, clock.to_text(now))
+        elif state == FREED:
+            raise InvalidBooking(CHECK_IN_CLOSED.format(clock.clock(start_at + FREED_AFTER)))
+        elif state == UNTRACKED:
+            raise InvalidBooking(CHECK_IN_UNTRACKED)
+        elif state == AWAITING and now < start_at - CHECK_IN_OPENS:
+            raise InvalidBooking(CHECK_IN_NOT_OPEN.format(clock.clock(start_at - CHECK_IN_OPENS)))
+        elif state == AWAITING:
+            raise InvalidBooking(CHECK_IN_CLOSED.format(clock.clock(start_at + FREED_AFTER)))
+        session.commit()  # also ends the lock when it was already checked in
+    except BaseException:
+        session.rollback()
+        raise
+    if checked_in_now:
+        log.info("bookings: check in booking_id=%d room_id=%d", booking_id, room.id)
+    return _views(session, None, [_get_row(session, booking_id)])[0]
 
 
 def cancel(session: Session, actor: Person, booking_id: int) -> BookingView:

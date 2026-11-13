@@ -1,5 +1,5 @@
 <tr id="room-{{ room.id }}" class="room-row is-confirming">
-  <td colspan="4">
+  <td colspan="5">
     <form class="confirm" method="post" action="/manage-rooms/{{ room.id }}/close"
           hx-post="/manage-rooms/{{ room.id }}/close" hx-target="closest tr" hx-swap="outerHTML">
       <p class="confirm-question">Close {{ room.name }}? No one can book it until you reopen it, and its future bookings are cancelled.</p>

@@ -1,8 +1,11 @@
-"""The one way to know who is using the app (AD-6).
+"""The one way to know who is using the app (AD-6), and which room a door tablet is for.
 
 `current_person` is the only reader of the `person_id` cookie. When the cookie is
 missing or names an unknown or inactive person it raises `NeedsPerson`, which the
 handler registered in `app.py` turns into a trip to Pick your name and back.
+
+`current_tablet` is the only reader of the `door_tablet` cookie (AD-8). It resolves the
+cookie's token to the tablet's room, or to None, and never redirects.
 """
 
 from typing import Annotated
@@ -16,9 +19,12 @@ from roombooker.core.db import get_session
 from roombooker.core.settings import get_settings
 from roombooker.people import service as people_service
 from roombooker.people.service import Person
+from roombooker.rooms import service as rooms_service
+from roombooker.rooms.service import Room
 
 COOKIE_NAME = "person_id"
 COOKIE_MAX_AGE = 400 * 24 * 60 * 60  # 400 days
+TABLET_COOKIE = "door_tablet"
 PICK_PATH = "/pick-name"
 
 
@@ -80,9 +86,33 @@ def remember_person(response: Response, person_id: int) -> None:
     )
 
 
-def _forget_person(response: Response) -> None:
+def forget_person(response: Response) -> None:
+    """Clear the `person_id` cookie, e.g. when the browser becomes a door tablet."""
     response.delete_cookie(
         COOKIE_NAME,
+        path="/",
+        httponly=True,
+        samesite="lax",
+        secure=get_settings().is_production,
+    )
+
+
+def current_tablet(
+    request: Request, session: Annotated[Session, Depends(get_session)]
+) -> Room | None:
+    """FastAPI dependency: the room this browser is the door tablet for, or None."""
+    return rooms_service.tablet_room(session, request.cookies.get(TABLET_COOKIE))
+
+
+CurrentTablet = Annotated[Room | None, Depends(current_tablet)]
+
+
+def remember_tablet(response: Response, token: str) -> None:
+    """Set the `door_tablet` cookie to a tablet's secret token (AD-8)."""
+    response.set_cookie(
+        TABLET_COOKIE,
+        token,
+        max_age=COOKIE_MAX_AGE,
         path="/",
         httponly=True,
         samesite="lax",
@@ -98,5 +128,5 @@ async def needs_person_handler(request: Request, exc: NeedsPerson) -> Response:
     else:
         response = RedirectResponse(target, status_code=303)
     if exc.clear_cookie:
-        _forget_person(response)
+        forget_person(response)
     return response

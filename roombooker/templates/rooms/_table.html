@@ -6,6 +6,7 @@
         <th scope="col">Name</th>
         <th scope="col">Capacity</th>
         <th scope="col">Status</th>
+        <th scope="col">Door tablet</th>
         <th scope="col"><span class="visually-hidden">Actions</span></th>
       </tr>
     </thead>
@@ -14,7 +15,7 @@
       {% if room.id == editing_id %}
       {% with errors=edit_errors, values=edit_values %}{% include "rooms/_edit_row.html" %}{% endwith %}
       {% elif room.id == confirming_id %}
-      {% include "rooms/_confirm_close_row.html" %}
+      {% include confirm_rows[confirming_kind] %}
       {% else %}
       {% include "rooms/_row.html" %}
       {% endif %}

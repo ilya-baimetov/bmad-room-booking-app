@@ -1,8 +1,13 @@
-"""Rooms (find a free room), the booking form, booking details and cancelling.
+"""Rooms (find a free room), the booking form, booking details and cancelling, and a
+room's door page with check-in.
 
 Calls `bookings.service` only (AD-1), and `core.time` for UK time (AD-5). Every route
 works on a full page load; htmx only narrows the swap with `hx-select` (AD-2).
 Writes are form POSTs with redirect-after-post.
+
+The door page knows the room only from the tablet cookie (`CurrentTablet`), never the
+person, and links nowhere: its refusals are shown on the door page itself, not on the
+app's refusal page with its top bar (AD-9).
 """
 
 from datetime import datetime, timedelta
@@ -21,7 +26,8 @@ from roombooker.bookings.service import (
 )
 from roombooker.core import time as uk
 from roombooker.core.db import get_session
-from roombooker.core.identity import CurrentPerson
+from roombooker.core.errors import DomainError
+from roombooker.core.identity import CurrentPerson, CurrentTablet
 from roombooker.people.service import Person
 
 router = APIRouter()
@@ -320,3 +326,38 @@ def cancel(
 ) -> Response:
     service.cancel(session, person, booking_id)
     return RedirectResponse("/rooms?notice=cancelled", status_code=303)
+
+
+def _door(
+    request: Request,
+    session: Session,
+    room: service.Room | None,
+    message: str | None = None,
+    status_code: int = 200,
+) -> Response:
+    """The door page for the tablet's room, or the not-set-up page when it has none."""
+    return _render(
+        request,
+        "bookings/door.html",
+        status_code,
+        door=service.door_page(session, room) if room is not None else None,
+        message=message,
+    )
+
+
+@router.api_route("/door", methods=["GET", "HEAD"])
+def door(request: Request, session: DbSession, tablet: CurrentTablet) -> Response:
+    return _door(request, session, tablet)
+
+
+@router.post("/door/check-in/{booking_id:int}")
+def door_check_in(
+    request: Request, session: DbSession, tablet: CurrentTablet, booking_id: int
+) -> Response:
+    if tablet is None:
+        return _door(request, session, None, status_code=403)
+    try:
+        service.check_in(session, tablet, booking_id)
+    except DomainError as exc:
+        return _door(request, session, tablet, exc.message, exc.status_code)
+    return RedirectResponse("/door", status_code=303)

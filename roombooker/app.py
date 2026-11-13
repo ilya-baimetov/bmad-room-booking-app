@@ -40,6 +40,7 @@ def create_app() -> FastAPI:
     templates.env.globals["can_manage_office"] = can_manage_office
     templates.env.filters["clock"] = uk.clock
     templates.env.filters["day"] = uk.day
+    templates.env.filters["short_date"] = uk.short_date
     app.state.templates = templates
 
     app.mount("/static", StaticFiles(directory=PACKAGE_DIR / "static"), name="static")

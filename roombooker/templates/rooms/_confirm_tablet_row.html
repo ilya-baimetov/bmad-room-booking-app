@@ -1,0 +1,14 @@
+{# A plain form, no hx-post: the response makes this browser the door tablet and leaves the app. -#}
+<tr id="room-{{ room.id }}" class="room-row is-confirming">
+  <td colspan="5">
+    <form class="confirm" method="post" action="/manage-rooms/{{ room.id }}/tablet">
+      <p class="confirm-question">Set up this browser as the door tablet for {{ room.name }}? It will show {{ room.name }}'s bookings for today, and you will be signed out in this browser.{% if room.has_tablet %} It replaces the room's current door tablet.{% endif %}</p>
+      <p class="confirm-question">Mount it with the screen centre about 120 cm from the floor and set it never to sleep.</p>
+      <div class="form-actions">
+        <button class="button button-secondary" type="submit">Set up door tablet</button>
+        <a class="button button-secondary" href="/manage-rooms" autofocus
+           hx-get="/manage-rooms" hx-select="#room-{{ room.id }}" hx-target="closest tr" hx-swap="outerHTML">Not now</a>
+      </div>
+    </form>
+  </td>
+</tr>

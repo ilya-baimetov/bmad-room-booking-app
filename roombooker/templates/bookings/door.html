@@ -1,0 +1,42 @@
+{# The door tablet's page. Standalone on purpose: no top bar and no links into the app (AD-9). #}
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if door %}{{ door.room.name }}{% else %}Door tablet{% endif %} · Room Booking</title>
+  <link rel="stylesheet" href="/static/tokens.css">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div id="announce" class="announce" role="status" aria-live="polite">{% if message %}<p class="error-message">{{ message }}</p>{% endif %}</div>
+  <main class="page door">
+    {% if door %}
+    <h1 class="title">{{ door.room.name }}</h1>
+    <p class="meta">Today's bookings{% if door.room.is_closed %} · Closed{% endif %}</p>
+    {% if door.bookings %}
+    <ul class="door-bookings">
+      {% for booking in door.bookings %}
+      <li id="booking-{{ booking.id }}" class="door-booking{% if booking.id == door.marked_id %} is-marked{% endif %}">
+        {% if booking.id == door.marked_id %}<strong class="door-marker">{{ door.marked_label }}</strong>{% endif %}
+        <span class="door-times">{{ booking.start_at | clock }}–{{ booking.end_at | clock }}</span>
+        <span class="door-title">{{ booking.title }}</span>
+        {% if booking.check_in == "checked_in" %}
+        <span class="door-checked-in">✓ Checked in</span>
+        {% elif booking.can_check_in %}
+        <form method="post" action="/door/check-in/{{ booking.id }}">
+          <button class="button button-primary" type="submit">Check in<span class="visually-hidden"> {{ booking.title }}, {{ booking.start_at | clock }}</span></button>
+        </form>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="hint">No bookings today.</p>
+    {% endif %}
+    {% else %}
+    <p class="lead">This tablet isn't set up for a room. Ask your office manager to set it up.</p>
+    {% endif %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<tr id="room-{{ room.id }}" class="room-row is-confirming">
+  <td colspan="5">
+    <form class="confirm" method="post" action="/manage-rooms/{{ room.id }}/tablet/remove"
+          hx-post="/manage-rooms/{{ room.id }}/tablet/remove" hx-target="closest tr" hx-swap="outerHTML">
+      <p class="confirm-question">Remove the door tablet from {{ room.name }}? It will stop showing the room's bookings until it is set up again.</p>
+      <div class="form-actions">
+        <button class="button button-secondary" type="submit">Remove tablet</button>
+        <a class="button button-secondary" href="/manage-rooms" autofocus
+           hx-get="/manage-rooms" hx-select="#room-{{ room.id }}" hx-target="closest tr" hx-swap="outerHTML">Keep tablet</a>
+      </div>
+    </form>
+  </td>
+</tr>

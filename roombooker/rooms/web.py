@@ -1,8 +1,11 @@
-"""Manage rooms: an office manager's rooms table, with add, edit, close and reopen (R3-R7).
+"""Manage rooms: an office manager's rooms table, with add, edit, close and reopen (R3-R7),
+and setting up and removing a room's door tablet.
 
 Calls `rooms.service` only (AD-1). Every write is an HTML form POST: full page loads
 get redirect-after-post to `/manage-rooms` with the result notice; htmx requests get
 the row or form fragment, with the notice swapped into `#announce` out of band.
+Setting up a door tablet is the exception: a plain form whose response turns this
+browser into the tablet and sends it to `/door`.
 `NotAllowed` and `RoomNotFound` go to the core handler (AD-12).
 """
 
@@ -13,7 +16,7 @@ from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from roombooker.core.db import get_session
-from roombooker.core.identity import CurrentPerson
+from roombooker.core.identity import CurrentPerson, forget_person, remember_tablet
 from roombooker.rooms import service
 from roombooker.rooms.service import InvalidRoom, Room
 
@@ -28,6 +31,13 @@ NOTICES = {
     "saved": "Saved {}.",
     "closed": "Closed {}.",
     "reopened": "Reopened {}.",
+    "tablet_removed": "Removed the door tablet from {}.",
+}
+DOOR_PAGE = "/door"
+CONFIRM_ROWS = {
+    "close": "rooms/_confirm_close_row.html",
+    "tablet": "rooms/_confirm_tablet_row.html",
+    "remove_tablet": "rooms/_confirm_remove_tablet_row.html",
 }
 
 
@@ -50,14 +60,17 @@ def _page(
     status_code: int = 200,
     **context,
 ) -> Response:
-    """The full Manage rooms page. One row may be shown as its edit form or close confirmation."""
+    """The full Manage rooms page. One row may be shown as its edit form or one of its
+    confirmations (`confirming_kind`, a key of CONFIRM_ROWS)."""
     context.setdefault("notice", None)
     context.setdefault("editing_id", None)
     context.setdefault("confirming_id", None)
+    context.setdefault("confirming_kind", "close")
     context.setdefault("edit_errors", [])
     context.setdefault("edit_values", None)
     context.setdefault("add_errors", [])
     context.setdefault("add_values", None)
+    context["confirm_rows"] = CONFIRM_ROWS
     if "rooms" not in context:
         context["rooms"] = service.list_rooms(session, person)
     return _render(request, "rooms/manage.html", status_code, person=person, **context)
@@ -199,15 +212,21 @@ def edit_room(
     return _redirect("saved", room)
 
 
+def _confirm(
+    request: Request, session: Session, person: service.Person, room_id: int, kind: str
+) -> Response:
+    """Ask once: in place of the row for htmx, the page with the row asking otherwise."""
+    room = service.get_room(session, person, room_id)
+    if _is_htmx(request):
+        return _render(request, CONFIRM_ROWS[kind], room=room)
+    return _page(request, session, person, confirming_id=room.id, confirming_kind=kind)
+
+
 @router.get(PAGE + "/{room_id:int}/close")
 def confirm_close(
     request: Request, session: DbSession, person: CurrentPerson, room_id: int
 ) -> Response:
-    """Ask once before closing: in place of the row for htmx, its own page otherwise."""
-    room = service.get_room(session, person, room_id)
-    if _is_htmx(request):
-        return _render(request, "rooms/_confirm_close_row.html", room=room)
-    return _page(request, session, person, confirming_id=room.id)
+    return _confirm(request, session, person, room_id, "close")
 
 
 @router.post(PAGE + "/{room_id:int}/close")
@@ -222,3 +241,35 @@ def reopen_room(
     request: Request, session: DbSession, person: CurrentPerson, room_id: int
 ) -> Response:
     return _row_done(request, "reopened", service.reopen_room(session, person, room_id))
+
+
+@router.get(PAGE + "/{room_id:int}/tablet")
+def confirm_set_up_tablet(
+    request: Request, session: DbSession, person: CurrentPerson, room_id: int
+) -> Response:
+    return _confirm(request, session, person, room_id, "tablet")
+
+
+@router.post(PAGE + "/{room_id:int}/tablet")
+def set_up_tablet(session: DbSession, person: CurrentPerson, room_id: int) -> Response:
+    """This browser becomes the room's door tablet: it gets the tablet cookie, loses the
+    person cookie, and goes to the door page (R9)."""
+    _room, token = service.set_up_tablet(session, person, room_id)
+    response = RedirectResponse(DOOR_PAGE, status_code=303)
+    remember_tablet(response, token)
+    forget_person(response)
+    return response
+
+
+@router.get(PAGE + "/{room_id:int}/tablet/remove")
+def confirm_remove_tablet(
+    request: Request, session: DbSession, person: CurrentPerson, room_id: int
+) -> Response:
+    return _confirm(request, session, person, room_id, "remove_tablet")
+
+
+@router.post(PAGE + "/{room_id:int}/tablet/remove")
+def remove_tablet(
+    request: Request, session: DbSession, person: CurrentPerson, room_id: int
+) -> Response:
+    return _row_done(request, "tablet_removed", service.remove_tablet(session, person, room_id))
