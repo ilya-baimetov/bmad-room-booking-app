@@ -3,7 +3,7 @@ title: 'Each person subscribes to a private feed of their bookings and can reset
 type: feature
 ticket: '2'
 created: '2026-11-13'
-status: built
+status: done
 baseline_revision: 'ac3858abe891c35891774ecff1e149edd162bd80'
 route: full
 route_source: auto

@@ -75,3 +75,4 @@ Staff see the rooms they organise or attend in their own calendar app without re
 - Decision: (2026-11-13) Sliced straight into stories with no epics, as few as possible, each one build session (the user's call).
 - Decision: (2026-11-13) Story 1, the Add to calendar download, is the tracer bullet: it settles the iCalendar event format and UK-time handling that story 2's feed reuses, so story 2 waits on it.
 - Decision: (2026-11-13) No refactor sweep or closing end-to-end story: two entries is under the threshold for either.
+- Decision: (2026-11-13) Story 2 closed as done on Ilya's call, before its three-app subscription check and with only the build's quick review; the three-app check is still owed under Done when.
