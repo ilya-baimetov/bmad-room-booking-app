@@ -4,10 +4,10 @@ type: epic
 title: "Check in at the door or lose the room"
 parent: initiative-check-in
 covers: [R1, R2, R3, R4, R5, R6, R7, R8]
-sources: []
+sources: [_bmad-output/initiative-check-in/initiative-check-in.md, _bmad-output/initiative-check-in/architecture-check-in/architecture-check-in.md]
 companions: [_bmad-output/initiative-check-in/ux-door-screen/DESIGN.md, _bmad-output/initiative-check-in/ux-door-screen/EXPERIENCE.md, _bmad-output/initiative-check-in/architecture-check-in/architecture-check-in.md]
 after: []
-refined: false
+refined: true
 risk: high
 ---
 
@@ -21,19 +21,40 @@ The whole check-in initiative in one epic. Office managers set up, replace and r
 
 In rooms with a door tablet, bookings nobody turns up to go back to people who need them, and office managers see how many (the initiative's Outcome signal).
 
+## Requirements
+
+- R1 (parent R1): An office manager sets up a tablet once for one room in their office, and can remove it; a room has at most one tablet, so setting up a new one replaces the old. From setup until removal the tablet shows that room's page with no further sign-in.
+- R2 (parent R2): The room's tablet page shows that room's bookings for today (UK day), and which one is current or next.
+- R3 (parent R3): Anyone at the tablet checks in a booking with one tap, without saying who they are, from 5 minutes before its start until 15 minutes after; outside that window the tablet offers no check-in for it.
+- R4 (parent R4): A booking with no check-in by 15 minutes after its start is freed: the rest of its slot, from 15 minutes after its start to its end, can be booked by anyone like any free time.
+- R5 (parent R5): A freed booking shows as "Freed: nobody checked in" on My bookings and its details page, to its organiser and its attendees alike, and as cancelled in their subscribed calendars; it is distinct from a booking that was cancelled or simply ended. A freed booking cannot be cancelled; Book again still works.
+- R6 (parent R6): An office manager sees, beside their office's rooms on Manage rooms, how many bookings in their office were freed from Monday to today, UK time.
+- R7 (parent R7): A booking is freed only if its check-in window, from 5 minutes before its start to 15 minutes after, opens after freeing went live and its room had a tablet set up for the whole of that window; any other booking is never freed.
+- R8 (parent R8): A booking in a room with a tablet shows, to its organiser and attendees on My bookings and its details page, its check-in window ("Check in at the door, 09:55–10:15") until checked in, freed or the window closes, and "Checked in" once checked in; bookings in rooms with no tablet show what they show today.
+- R9 (parent R1; AD-8): On the tablet's own browser, an office manager signed in by Pick your name chooses "Set up door tablet" on a room's row in Manage rooms and confirms in the row, as for Close; the confirm row names the room and gives the mounting guidance (screen centre about 120 cm from the floor, tablet set never to sleep). Setup clears that browser's person cookie and lands on the door page.
+- R10 (parent R1; AD-8): Each room's row on Manage rooms says whether it has a door tablet and since when; an office manager of that office removes it there, from any device, after a confirm in the row; the removed tablet then shows the not-set-up page.
+- R11 (parent R6): The freed count is one line above the rooms table on Manage rooms, "Bookings freed since Monday: {n}", shown with 0 too.
+- R12 (parent R5; architecture Deferred): A freed booking stays in the Rooms page's "Your upcoming bookings" until it ends, grey and tagged "Freed: nobody checked in" as on My bookings.
+- R13 (parent R7): When freeing went live is the setting `FREEING_STARTS_AT` (UTC), read through `core.settings.get_settings()`; while it is unset nothing is freed and no screen says a booking will be freed (no door countdown, no "or the room is freed"), so tablets and check-in can ship first and the setting doubles as an off switch.
+
+## Constraints
+
+- C1–C6 (parent C1–C6) bind as written in the initiative: no QR codes, sensors, badges or notifications; plain web-page tablets; `bookings.service`'s lock and the overlap triggers stay the double-booking guarantee; time from `utc_now()` with the start + 15 boundary testable; every page a full page load; feed UIDs stable.
+
 ## Done when
 
 - In production, an office manager sets up a room's tablet, and it shows today's bookings and checks one in only within its window; organisers and attendees see the window and "Checked in".
 - In production, a covered booking with no check-in is freed at start + 15 minutes, the rest of its slot is bookable, and it shows as "Freed: nobody checked in" on My bookings and details, as cancelled in subscribed calendars, with no Cancel.
 - A checked-in booking, a booking whose window no tablet covered in full, and one whose window opened before freeing went live are never freed.
 - An office manager sees this week's freed count for their office on Manage rooms.
-- Live in production for all three offices, with tablets set up in the rooms that have one.
+- Live in production for all three offices with `FREEING_STARTS_AT` set, and tablets set up in the rooms that have one.
 - The tracer path from the initiative's Boundaries passes end to end against the deployed app, with boundary tests at start − 5, start + 15 − 1 min and start + 15 (patched `core.time.utc_now`).
 
 ## Boundaries
 
 - Everything in the initiative's Boundaries applies; this epic owns every touch point listed there.
-- Open for refinement: tablet setup and removal flow and wording (R1); the freed count's placement and wording on Manage rooms (R6); whether a freed booking stays in the Rooms page's "Your upcoming bookings"; where the "freeing went live" moment is recorded (R7).
+- Out: booking from the tablet, and any link from the door page into the app.
+- Must not change: rooms with no tablet, and every booking while `FREEING_STARTS_AT` is unset, behave exactly as today apart from check-in.
 
 ## References
 
@@ -44,5 +65,7 @@ In rooms with a door tablet, bookings nobody turns up to go back to people who n
 
 ## Notes
 
+- Assumption: An office manager may set up a tablet for any room in their office from that tablet's browser; the confirm row naming the room is the only safeguard against choosing the wrong room.
+- Decision: (2026-11-13) Refined with Sofia's picks (the user's call): setup on Manage rooms from the tablet's browser with an in-row confirm, removal from any device (R9, R10); the count as one line above the rooms table (R11); a freed booking stays in Your upcoming bookings until it ends (R12); freeing go-live is the `FREEING_STARTS_AT` setting, unset meaning off (R13).
 - Assumption: Buying, mounting and powering the tablets is an operational step each office manager owns, outside this epic's stories; the epic supplies setup guidance (mounting height, kiosk or never-sleep) with R1.
 - Decision: (2026-11-13) One epic for now (the user's call); Sofia's three-epic split (tablets and check-in, freeing, weekly count) is the fallback if stories run past twelve.
