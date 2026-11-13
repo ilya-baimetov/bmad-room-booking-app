@@ -3,7 +3,7 @@ title: 'Office managers set up a door tablet and people check in at it'
 type: feature
 ticket: '1'
 created: '2026-11-13'
-status: built
+status: done
 baseline_revision: '47c0ac1f4241f2fc33d8f4272faa6426c24245ec'
 route: full
 route_source: auto
