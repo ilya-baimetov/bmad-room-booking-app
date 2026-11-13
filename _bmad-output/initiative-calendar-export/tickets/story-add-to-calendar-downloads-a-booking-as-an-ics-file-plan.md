@@ -3,7 +3,7 @@ title: 'Add to calendar downloads a booking as an .ics file'
 type: feature
 ticket: '1'
 created: '2026-11-13'
-status: built
+status: done
 baseline_revision: 'a35097328314f4ca3b390f28367491086b74275a'
 route: full
 route_source: auto

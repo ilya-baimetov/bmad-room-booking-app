@@ -7,6 +7,7 @@ sources: [_bmad-output/initiative-calendar-export/sources/request-2026-11-13.md]
 companions: []
 after: []
 risk: medium
+status: in-progress
 ---
 
 # Room bookings show up in the calendar app people already use
