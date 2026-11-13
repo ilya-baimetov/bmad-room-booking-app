@@ -1,0 +1,60 @@
+# Stories of epic-check-in-or-lose-the-room. Table order is build order. `id` is permanent, never reused.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Office managers set up a door tablet and people check in at it"
+description = "Tracer bullet through every layer. Migration 0005 adds room_tablets and bookings.checked_in_at and freed_at with AD-3's CHECK (freed_at unset until story 2). On Manage rooms each room's row says whether it has a door tablet and since when; \"Set up door tablet\" in a browser, with an in-row confirm naming the room and the mounting guidance (screen centre about 120 cm from the floor, never sleep), writes the door_tablet cookie, clears the person cookie and removes the room's previous tablet at the same instant; \"Remove\" with an in-row confirm sets removed_at, from any browser. rooms.service provides each room's tablet periods (set_up_at, removed_at), which story 2 reads. core.identity gains CurrentTablet. GET /door shows the room's bookings for today with current or next marked, or the not-set-up page; POST /door/check-in/{id} records a check-in under begin_immediate inside start − 5 to start + 15, idempotently, then 303s to /door. BookingView gains check_in, check_in_opens_at, freed_at and can_check_in (AD-7), which stories 2–4 render. One log line per setup, removal and check-in, never the token. Plain styling; story 3 builds the full door screen."
+verify = "In a private window or second browser serving as the tablet, an office manager sets up a room from Manage rooms and lands on /door showing today's bookings; Check in inside the window shows \"✓ Checked in\", still there after reload; outside the window none is offered; Manage rooms shows the tablet and Remove makes /door show the not-set-up page; tests at start − 5, start + 15 − 1 min and start + 15 pass with core.time.utc_now patched."
+covers = ["R1", "R2", "R3", "R9", "R10"]
+after = []
+hitl = false
+risk = "medium"
+references = ["architecture — _bmad-output/initiative-check-in/architecture-check-in/architecture-check-in.md, AD-2, AD-7, AD-8, AD-9"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Unclaimed bookings are freed and the rest of their slot is bookable"
+description = "bookings.service._settle, run at the start of every public bookings.service read or write, sets freed_at = start_at + 15 min under begin_immediate for each due booking (AD-5): not checked in, not freed, utc_now() >= start + 15, its window [start − 5, start + 15) covered in full by story 1's tablet periods (AD-6), and opening at or after ROOMBOOKER_FREEING_STARTS_AT from core.settings.get_settings() (R13; unset means nothing is freed). freed_at and checked_in_at are never cleared; check-in and cancel refuse a freed booking, cancel with a new InvalidBooking message (AD-12). Migration 0006 replaces bookings_no_overlap_insert and _update so the other booking's end is COALESCE(freed_at, end_at), keeping the room_closed check and half-open intervals, and creates the view freed_bookings(booking_id, room_id, freed_at) that story 4 reads (AD-4, AD-11); store.overlapping, free_rooms, bookings_in_slot and slot_problem use the same blocking end; listings keep end_at. Provides freeing_live (the setting is set) on BookingView, which stories 3 and 4 read for R13's wording. One log line per freeing."
+verify = "With the setting set and utc_now patched, a covered, unclaimed 14:00–15:00 booking is freed exactly at 14:15 and not at 14:14, after which another booking 14:30–15:00 in that room is accepted by the app and the database while one from 14:00 is refused; checked-in, not fully covered, pre-setting bookings, and all bookings with the setting unset, are never freed; cancelling a freed booking is refused; existing overlap and room-close tests pass. In the running app with the setting set, a covered booking that started over 15 minutes ago with no check-in is refused cancellation, and its room shows free for the rest of the slot when booking."
+covers = ["R4", "R5", "R7", "R13"]
+after = [1]
+hitl = false
+risk = "high"
+references = ["architecture — _bmad-output/initiative-check-in/architecture-check-in/architecture-check-in.md, AD-2, AD-3, AD-4, AD-5, AD-6, AD-11, AD-12"]
+
+[[entry]]
+id = 3
+type = "story"
+title = "The door screen shows every state from across the corridor"
+description = "Builds the door screen to the UX in its own stylesheet (roombooker/static/door.css): the Free, Booked and Closed panel; the countdown \"Freed at {start+15} if nobody checks in\" only while freeing is live (R13); the back-to-back button naming the booking it checks in; today's list with Checked in, Freed and Ended; the freed panel with \"Free until …\" and a rebooked freed slot; the styled not-set-up page; race, repeat-tap and failure messages; the 30 s htmx poll with hx-select plus a meta refresh; the lost-connection line; DESIGN.md's door ramp, landscape and portrait layouts; #announce, lang en-GB and the title. Renders stories 1 and 2's state, reading BookingView.freeing_live for the countdown."
+verify = "Each row of EXPERIENCE.md's door-screen State Patterns table renders as specified at its boundary minute in server-rendered tests with utc_now patched; in the running app with JavaScript on, the page refreshes itself every 30 s and Check in swaps in place, and with JavaScript off the plain form and meta refresh work; in a landscape and a portrait browser window the room name, status and current booking fit without scrolling."
+covers = ["R2", "R3", "R13"]
+after = [1, 2]
+hitl = false
+risk = "medium"
+references = ["design — _bmad-output/initiative-check-in/ux-door-screen/EXPERIENCE.md, door screen", "design — _bmad-output/initiative-check-in/ux-door-screen/DESIGN.md", "architecture — _bmad-output/initiative-check-in/architecture-check-in/architecture-check-in.md, AD-9"]
+
+[[entry]]
+id = 4
+type = "story"
+title = "Check-in states and freed bookings show everywhere outside the door"
+description = "Renders BookingView.check_in and freeing_live, never recomputing them. My bookings and details, for organiser and attendees, show \"Check in at the door, 09:55–10:15\" on today's covered bookings until checked in or the window closes, then \"Checked in\"; the details row adds \", or the room is freed\" only while freeing is live. A freed booking is grey (calendar-booking-freed) and tagged \"Freed: nobody checked in\" on My bookings and the organiser's Your upcoming bookings until it ends; its details row reads \"Freed: nobody checked in. {Room} was freed at 10:15.\", Cancel and Add to calendar hidden, Book again kept. ical writes a freed booking with its unchanged UID, STATUS:CANCELLED and SEQUENCE:1 in feeds and the .ics download, other events byte for byte as today (AD-10). Manage rooms shows \"Bookings freed since Monday: {n}\" above the rooms table, counted by rooms.service from story 2's freed_bookings view over [uk_midnight(week_start(UK today)), utc_now()) for the office (AD-11). Rooms with no tablet render as today."
+verify = "In tests with utc_now patched: the window tag and \"Checked in\" show for organiser and attendee only on today's covered bookings; a freed booking is grey and tagged on My bookings and Your upcoming bookings, its details show the freed row with Book again and no Cancel or Add to calendar, its feed event keeps its UID with STATUS:CANCELLED and SEQUENCE:1, and a feed with nothing freed is unchanged; Manage rooms counts bookings freed since Monday 00:00 UK for its office only, 0 included. In the running app, a freed booking shows grey with its tag on My bookings and Manage rooms shows the count."
+covers = ["R5", "R6", "R8", "R11", "R12", "R13"]
+after = [2, 3]
+hitl = false
+risk = "medium"
+references = ["design — _bmad-output/initiative-check-in/ux-door-screen/EXPERIENCE.md, My bookings and details", "design — _bmad-output/initiative-check-in/ux-door-screen/DESIGN.md, Freed booking in My bookings", "architecture — _bmad-output/initiative-check-in/architecture-check-in/architecture-check-in.md, AD-10, AD-11, AD-12"]
+
+[[entry]]
+id = 5
+type = "story"
+title = "End-to-end: check in or lose the room"
+description = "Playwright tests in tests/e2e for the initiative's tracer path: a manager sets up a room's tablet in a browser window; a booking there passes start + 15 with no check-in and is freed; someone else books the rest of the slot; the organiser sees it as freed on My bookings; the manager's weekly count shows it; plus a check-in at the door that keeps a booking. Time passes through a clock offset in core.time that the e2e harness sets through a non-production setting, read via core.settings.get_settings() and refused when ROOMBOOKER_ENV is production; this story builds it."
+verify = "uv run pytest tests/e2e passes with new tests that walk: set up a tablet, let a booking pass start + 15 unclaimed, see it freed on /door, book 14:30 onward as someone else, see Freed on the organiser's My bookings and the count on Manage rooms; and check in at /door so a booking is not freed."
+covers = [] # checks R1, R3, R4, R5, R6 end to end; delivers none of them
+after = [3, 4]
+hitl = false
+risk = "medium"

@@ -45,7 +45,7 @@ Rooms that were booked and then abandoned go back to people who need them. The s
 - A booking nobody checks into is freed 15 minutes after its start, and someone else can then book the rest of its slot; a checked-in booking, or one whose window no tablet covered in full or that opened before freeing went live, is never freed.
 - The organiser and attendees see a freed booking as freed on My bookings, its details page and their subscribed calendars, and cannot cancel it.
 - An office manager sees this week's freed count for their office on Manage rooms.
-- Live in production for all three offices.
+- Running on the user's computer, a browser window serving as each room's tablet; production rollout is outside this initiative.
 
 ## Boundaries
 
@@ -79,6 +79,7 @@ Rooms that were booked and then abandoned go back to people who need them. The s
 - Decision: (2026-11-13) EXPERIENCE.md's tag wording "Check in at the door, 09:55–10:15" governs over DESIGN.md's "by 10:15".
 - Decision: (2026-11-13) One epic for now, epic-check-in-or-lose-the-room, covering R1–R8 (the user's call). Sofia proposed three: tablets and check-in, freeing, the weekly count; declined for now, so the epic may be split when its stories are planned.
 - Decision: (2026-11-13) No platform-baseline epic: the app, CI and deployment already exist and are unchanged.
+- Decision: (2026-11-13) Everything runs on the user's computer, the tablet being a browser window; production rollout to the three offices is out of this initiative (the user's call).
 - Decision: (2026-11-13) Freeing applies only to bookings whose window opens after freeing goes live (R7), so tablets set up before then free no past bookings; the epic records when freeing went live.
 - Decision: (2026-11-13) Tablets and check-in may reach production before freeing; until freeing is live no screen says a booking will be freed (no door countdown, no "or the room is freed").
 - Decision: (2026-11-13) Schema: the first migration adds room_tablets and both checked_in_at and freed_at with AD-3's CHECK; a later one replaces the overlap triggers and creates the freed_bookings view (AD-4, AD-11).
