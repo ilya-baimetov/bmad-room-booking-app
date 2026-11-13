@@ -487,3 +487,103 @@ def test_normal_booking_form_has_no_pickers(client, act, room):
     assert ANNOUNCE.search(form.text)[1] == ""
     assert PICKERS not in form.text and "Check time" not in form.text
     assert hidden("date", uk_day(1)) in form.text
+
+
+ADD_TO_CALENDAR = re.compile(r'href="/bookings/(\d+)/calendar\.ics"[^>]*>Add to calendar</a>')
+
+
+def ics_lines(text: str) -> list[str]:
+    """The content lines of an iCalendar text, unfolded."""
+    return text.replace("\r\n ", "").split("\r\n")
+
+
+def test_add_to_calendar_downloads_a_gmt_booking(client, act, room, ids, insert_booking):
+    snug = room("Snug")
+    # Tue 12 Jan 2027, 10:00–11:00 GMT (UK time equals UTC in winter).
+    new_id = insert_booking(
+        snug, ids["hannah"], "2027-01-12T10:00:00Z", "2027-01-12T11:00:00Z", title="Planning"
+    )
+    act("hannah")
+    assert "10:00–11:00" in client.get(f"/bookings/{new_id}").text
+    response = client.get(f"/bookings/{new_id}/calendar.ics")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/calendar; charset=utf-8"
+    assert response.headers["content-disposition"] == (
+        f'attachment; filename="booking-{new_id}.ics"'
+    )
+    lines = ics_lines(response.text)
+    assert lines.count("BEGIN:VEVENT") == 1
+    assert "METHOD:PUBLISH" in lines and f"UID:booking-{new_id}@roombooker" in lines
+    assert "DTSTART:20270112T100000Z" in lines and "DTEND:20270112T110000Z" in lines
+    assert "SUMMARY:Planning" in lines and r"LOCATION:Snug\, London" in lines
+    assert "DESCRIPTION:Booked by Hannah Okafor" in lines
+    assert any(re.fullmatch(r"DTSTAMP:\d{8}T\d{6}Z", line) for line in lines)
+    assert client.head(f"/bookings/{new_id}/calendar.ics").status_code == 200
+
+
+def test_add_to_calendar_writes_a_bst_booking_in_utc(client, act, room, ids, insert_booking):
+    snug = room("Snug")
+    # Tue 7 Jul 2026, 10:00–11:00 BST (in the past, so straight to SQLite).
+    old = insert_booking(snug, ids["hannah"], "2026-07-07T09:00:00Z", "2026-07-07T10:00:00Z")
+    act("kieran")
+    page = client.get(f"/bookings/{old}")
+    assert "10:00–11:00" in page.text and ADD_TO_CALENDAR.search(page.text)  # ended, still shown
+    lines = ics_lines(client.get(f"/bookings/{old}/calendar.ics").text)
+    assert "DTSTART:20260707T090000Z" in lines and "DTEND:20260707T100000Z" in lines
+
+
+def test_add_to_calendar_escapes_and_folds_awkward_text(client, room, load_csv, people):
+    assert load_csv(*PEOPLE, "siobhan@example.com,Siobhán Ó Briain,Leeds,") == 0
+    snug = room("Snug")
+    title = "Q1; budget, plans \\ más — " + "é" * 74  # 100 characters
+    client.cookies.set("person_id", str(people()["siobhan@example.com"]["id"]))
+    response = client.post(
+        "/bookings",
+        data={"room": str(snug), "date": uk_day(1), "start": "10:00", "length": "60",
+              "title": title},
+    )
+    text = client.get(f"/bookings/{booking_id(response)}/calendar.ics").text
+    assert all(len(line.encode("utf-8")) <= 75 for line in text.split("\r\n"))
+    escaped = title.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
+    assert f"SUMMARY:{escaped}" in ics_lines(text)
+    assert "DESCRIPTION:Booked by Siobhán Ó Briain" in ics_lines(text)
+
+
+def test_add_to_calendar_for_someone_elses_booking_has_no_attendees(client, act, room, book, ids):
+    new_id = booking_id(book("hannah", room("Snug"), attendees=[ids["ben"]]))
+    act("kieran")  # neither organiser nor attendee
+    assert ADD_TO_CALENDAR.search(client.get(f"/bookings/{new_id}").text)[1] == str(new_id)
+    response = client.get(f"/bookings/{new_id}/calendar.ics")
+    assert response.status_code == 200
+    assert "Ben Adeyemi" not in response.text
+    assert "ATTENDEE" not in response.text and "ORGANIZER" not in response.text
+    act("hannah")  # not even the organiser's file lists attendees
+    assert "Ben Adeyemi" not in client.get(f"/bookings/{new_id}/calendar.ics").text
+
+
+def test_add_to_calendar_unknown_or_cancelled_booking_is_404(client, room, book):
+    new_id = booking_id(book("hannah", room("Snug")))
+    assert client.post(f"/bookings/{new_id}/cancel").status_code == 303
+    for missing in (new_id, 999):
+        response = client.get(f"/bookings/{missing}/calendar.ics")
+        assert response.status_code == 404
+        assert "That booking does not exist." in response.text
+
+
+def test_add_to_calendar_without_a_cookie_picks_a_name_first(client, room, book, ids):
+    new_id = booking_id(book("hannah", room("Snug")))
+    client.cookies.clear()
+    target = f"/bookings/{new_id}/calendar.ics"
+    response = client.get(target)
+    assert response.status_code == 303
+    assert response.headers["location"] == f"/pick-name?next={target}"
+    picked = client.post("/pick-name", data={"person_id": str(ids["ben"]), "next": target})
+    assert picked.status_code == 303 and picked.headers["location"] == target
+    assert client.get(target).status_code == 200
+
+
+def test_add_to_calendar_link_hidden_while_confirming_a_cancel(client, room, book):
+    new_id = booking_id(book("hannah", room("Snug")))
+    assert ADD_TO_CALENDAR.search(client.get(f"/bookings/{new_id}").text)
+    assert not ADD_TO_CALENDAR.search(client.get(f"/bookings/{new_id}/cancel").text)

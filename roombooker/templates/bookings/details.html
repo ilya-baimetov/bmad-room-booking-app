@@ -27,8 +27,9 @@
     <a class="button button-secondary" href="/bookings/{{ booking.id }}" autofocus>Keep booking</a>
   </div>
 </form>
-{% elif book_again_query or (booking.can_cancel and not has_ended) %}
+{% else %}
 <div class="form-actions">
+  <a class="button button-secondary" href="/bookings/{{ booking.id }}/calendar.ics" download>Add to calendar</a>
   {% if book_again_query %}<a class="button button-secondary" href="/bookings/new?{{ book_again_query }}">Book again</a>{% endif %}
   {% if booking.can_cancel and not has_ended %}<a class="button button-secondary" href="/bookings/{{ booking.id }}/cancel">Cancel booking</a>{% endif %}
 </div>

@@ -14,7 +14,7 @@ from sqlalchemy import Row
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from roombooker.bookings import store
+from roombooker.bookings import ical, store
 from roombooker.core import time as clock
 from roombooker.core.errors import DomainError, NotAllowed
 from roombooker.people import service as people_service
@@ -271,6 +271,12 @@ def _get_row(session: Session, booking_id: int) -> Row:
 def get_booking(session: Session, viewer: Person, booking_id: int) -> BookingView:
     """One booking, as the viewer may see it. Anyone may look."""
     return _views(session, viewer, [_get_row(session, booking_id)])[0]
+
+
+def booking_calendar(session: Session, viewer: Person, booking_id: int) -> str:
+    """One booking as an iCalendar file's text, for anyone who may look at it.
+    No attendees are written, whoever the viewer is."""
+    return ical.calendar([get_booking(session, viewer, booking_id)], clock.utc_now())
 
 
 def _clean_title(title: str) -> str:

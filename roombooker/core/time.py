@@ -21,6 +21,11 @@ def to_text(moment: datetime) -> str:
     return moment.astimezone(UTC).strftime(UTC_FORMAT)
 
 
+def ical_utc(moment: datetime) -> str:
+    """`20261117T100000Z`: an iCalendar UTC date-time (RFC 5545 form 2)."""
+    return moment.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
+
+
 def from_text(text: str) -> datetime:
     return datetime.strptime(text, UTC_FORMAT).replace(tzinfo=UTC)
 

@@ -267,6 +267,17 @@ def booking_details(
     )
 
 
+@router.api_route("/bookings/{booking_id:int}/calendar.ics", methods=["GET", "HEAD"])
+def booking_calendar(session: DbSession, person: CurrentPerson, booking_id: int) -> Response:
+    """Add to calendar: the booking as a one-event .ics download, for anyone who can
+    open its details page."""
+    return Response(
+        service.booking_calendar(session, person, booking_id),
+        media_type="text/calendar; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="booking-{booking_id}.ics"'},
+    )
+
+
 def _book_again_query(booking: service.BookingView) -> str:
     """The booking form's query for the same room, UK clock time, length, title and
     attendees, on the UK date one week later."""
