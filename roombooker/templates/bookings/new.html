@@ -8,9 +8,36 @@
   {# Enter in a text box reloads the form (keeping what was typed) instead of booking. #}
   <button class="visually-hidden" type="submit" formaction="/bookings/new" formmethod="get" tabindex="-1" aria-hidden="true">Search</button>
   <input type="hidden" name="room" value="{{ room.id }}">
+  {% if pick_time %}
+  <fieldset class="pick-time">
+    <legend class="label">Time</legend>
+    <div class="fields">
+      <div class="field">
+        <label class="label" for="booking-date">Date</label>
+        <input id="booking-date" class="input" name="date" type="date" value="{{ values.date }}">
+      </div>
+      <div class="field">
+        <label class="label" for="booking-start">Start</label>
+        <select id="booking-start" class="input" name="start">
+          {% for option in start_options %}<option value="{{ option }}"{% if option == values.start %} selected{% endif %}>{{ option }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label class="label" for="booking-length">Length</label>
+        <select id="booking-length" class="input" name="length">
+          {% for value, label in length_options %}<option value="{{ value }}"{% if value == values.length %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="button button-secondary" type="submit" formaction="/bookings/new" formmethod="get">Check time</button>
+    </div>
+  </fieldset>
+  {% else %}
   <input type="hidden" name="date" value="{{ values.date }}">
   <input type="hidden" name="start" value="{{ values.start }}">
   <input type="hidden" name="length" value="{{ values.length }}">
+  {% endif %}
 
   <div class="field">
     <label class="label" for="booking-title">Title</label>

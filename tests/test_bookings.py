@@ -298,3 +298,192 @@ def test_uk_time_conversion():
     winter = uk.uk_to_utc(date(2027, 1, 5), time(9, 0))
     assert uk.to_text(winter) == "2027-01-05T09:00:00Z"
     assert uk.uk_to_utc(date(2027, 3, 28), time(1, 30)) is None  # the clocks skip it
+    assert uk.utc_to_uk(summer) == (date(2027, 7, 1), "09:00")
+
+
+# Book again ----------------------------------------------------------------------------
+
+BOOK_AGAIN = re.compile(r'<a class="button button-secondary" href="(/bookings/new\?[^"]*)">Book again</a>')
+PICKERS = 'id="booking-date"'
+
+
+def book_again_url(page) -> str:
+    """The Book again link's URL on a details page (HTML-unescaped)."""
+    return BOOK_AGAIN.search(page.text)[1].replace("&amp;", "&")
+
+
+def hidden(name: str, value) -> str:
+    return f'<input type="hidden" name="{name}" value="{value}">'
+
+
+def chosen(person_id: int) -> str:
+    return f'name="attendee_id" value="{person_id}"'
+
+
+@pytest.fixture
+def insert_booking(db_path):
+    """Write a booking straight to the file, for times the web refuses (past, far ahead)."""
+
+    def _insert(room_id: int, organiser_id: int, start_at: str, end_at: str, title="Old") -> int:
+        with sqlite3.connect(db_path) as conn:
+            return conn.execute(
+                "INSERT INTO bookings (room_id, organiser_id, title, start_at, end_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (room_id, organiser_id, title, start_at, end_at),
+            ).lastrowid
+
+    return _insert
+
+
+def test_book_again_link_only_for_the_organiser(client, act, room, book, ids, insert_booking):
+    snug = room("Snug")
+    new_id = booking_id(book("hannah", snug, attendees=[ids["ben"]]))
+    ended = insert_booking(snug, ids["hannah"], "2020-01-07T10:00:00Z", "2020-01-07T11:00:00Z")
+
+    act("hannah")
+    assert BOOK_AGAIN.search(client.get(f"/bookings/{new_id}").text)
+    assert BOOK_AGAIN.search(client.get(f"/bookings/{ended}").text)  # ended ones too
+    assert not BOOK_AGAIN.search(client.get(f"/bookings/{new_id}/cancel").text)
+    for viewer in ("ben", "anna", "kieran"):  # attendee, room's manager, someone else
+        act(viewer)
+        assert not BOOK_AGAIN.search(client.get(f"/bookings/{new_id}").text)
+
+
+def test_book_again_free_next_week(client, act, room, book, ids, table):
+    snug = room("Snug")
+    attendees = [ids["ben"], ids["kieran"]]
+    first = booking_id(book("hannah", snug, title="Stand-up", attendees=attendees))
+    form = client.get(book_again_url(client.get(f"/bookings/{first}")))
+
+    assert form.status_code == 200
+    assert ANNOUNCE.search(form.text)[1] == ""
+    assert PICKERS not in form.text
+    assert hidden("room", snug) in form.text and hidden("date", uk_day(8)) in form.text
+    assert hidden("start", "10:00") in form.text and hidden("length", 60) in form.text
+    assert 'value="Stand-up"' in form.text
+    assert all(chosen(a) in form.text for a in attendees)
+
+    second = booking_id(
+        book("hannah", snug, day=uk_day(8), title="Stand-up", attendees=attendees)
+    )
+    week_later = uk.to_text(uk.uk_to_utc(date.fromisoformat(uk_day(8)), time(10, 0)))
+    assert table("SELECT start_at, title FROM bookings WHERE id = ?", second) == [
+        (week_later, "Stand-up")
+    ]
+    original = uk.to_text(uk.uk_to_utc(date.fromisoformat(uk_day(1)), time(10, 0)))
+    assert table("SELECT start_at FROM bookings WHERE id = ?", first) == [(original,)]
+    for booking in (first, second):
+        assert len(table("SELECT * FROM booking_attendees WHERE booking_id = ?", booking)) == 2
+
+
+def test_book_again_slot_taken_shows_pickers_then_check_time(client, act, room, book, ids):
+    snug = room("Snug")
+    first = booking_id(book("hannah", snug, title="Stand-up", attendees=[ids["ben"]]))
+    booking_id(book("anna", snug, day=uk_day(8), start="10:00", length="30"))
+
+    act("hannah")
+    form = client.get(book_again_url(client.get(f"/bookings/{first}")))
+    assert form.status_code == 200  # htmx swaps only 2xx
+    assert ANNOUNCE.search(form.text)[1] == (
+        '<p class="error-message" role="alert">'
+        "Someone has already booked Snug at that time. Pick another time.</p>"
+    )
+    assert PICKERS in form.text and ">Check time</button>" in form.text
+    assert '<option value="10:00" selected>' in form.text
+    assert '<option value="60" selected>' in form.text
+    assert 'value="Stand-up"' in form.text and chosen(ids["ben"]) in form.text
+
+    checked = client.get(
+        "/bookings/new",
+        params={"room": snug, "date": uk_day(8), "start": "11:00", "length": "60",
+                "title": "Stand-up", "attendee_id": ids["ben"]},
+    )
+    assert checked.status_code == 200
+    assert ANNOUNCE.search(checked.text)[1] == ""
+    assert PICKERS not in checked.text
+    assert 'value="Stand-up"' in checked.text and chosen(ids["ben"]) in checked.text
+    booking_id(book("hannah", snug, day=uk_day(8), start="11:00", attendees=[ids["ben"]]))
+
+
+def test_refused_title_on_a_taken_slot_announces_both(room, book, ids, table):
+    snug = room("Snug")
+    booking_id(book("anna", snug, start="10:00", length="60"))
+    response = book("hannah", snug, title="   ", attendees=[ids["ben"]])
+    assert response.status_code == 422
+    announced = ANNOUNCE.search(response.text)[1]
+    assert service.NEEDS_TITLE in announced
+    assert "Someone has already booked Snug at that time." in announced
+    assert PICKERS in response.text and chosen(ids["ben"]) in response.text
+    assert len(table("SELECT id FROM bookings")) == 1
+
+
+def test_book_again_keeps_the_uk_clock_time_across_a_clock_change(
+    client, act, room, ids, insert_booking
+):
+    snug = room("Snug")
+    # Sun 21 Mar 2027 09:00 GMT; the clocks go forward on 28 Mar.
+    old = insert_booking(snug, ids["hannah"], "2027-03-21T09:00:00Z", "2027-03-21T10:00:00Z")
+    act("hannah")
+    url = book_again_url(client.get(f"/bookings/{old}"))
+    assert "date=2027-03-28&start=09%3A00&length=60" in url
+    assert uk.to_text(uk.uk_to_utc(date(2027, 3, 28), time(9, 0))) == "2027-03-28T08:00:00Z"
+
+
+@pytest.mark.parametrize(
+    ("start_at", "end_at", "message"),
+    [
+        ("2020-01-07T10:00:00Z", "2020-01-07T11:00:00Z", service.IN_THE_PAST),
+        (None, None, service.TOO_FAR_AHEAD),
+        ("2027-03-21T01:30:00Z", "2027-03-21T02:00:00Z", "clocks go forward"),
+    ],
+    ids=["still in the past", "over 90 days", "time the clocks skip"],
+)
+def test_book_again_time_no_longer_valid(
+    client, act, room, ids, insert_booking, start_at, end_at, message
+):
+    snug = room("Snug")
+    if start_at is None:  # 85 days ahead, so one week later is past the 90-day limit
+        start = uk.uk_to_utc(date.fromisoformat(uk_day(85)), time(10, 0))
+        start_at, end_at = uk.to_text(start), uk.to_text(start + timedelta(hours=1))
+    old = insert_booking(snug, ids["hannah"], start_at, end_at, title="Retro")
+    act("hannah")
+    form = client.get(book_again_url(client.get(f"/bookings/{old}")))
+    assert message in ANNOUNCE.search(form.text)[1]
+    assert PICKERS in form.text and 'value="Retro"' in form.text
+
+
+def test_book_again_room_closed(client, act, room, book, ids, table, insert_booking):
+    attic = room("Attic")
+    old = insert_booking(attic, ids["hannah"], "2020-01-07T10:00:00Z", "2020-01-07T11:00:00Z")
+    act("anna")
+    assert client.post(f"/manage-rooms/{attic}/close").status_code == 303
+
+    act("hannah")
+    form = client.get(book_again_url(client.get(f"/bookings/{old}")))
+    assert "Attic is closed. Pick another room." in ANNOUNCE.search(form.text)[1]
+    refused = book("hannah", attic, day=uk_day(8))
+    assert refused.status_code == 409 and "Attic is closed." in refused.text
+    assert len(table("SELECT id FROM bookings")) == 1
+
+
+def test_book_again_drops_an_attendee_who_left(client, act, room, book, ids, load_csv):
+    snug = room("Snug")
+    first = booking_id(book("hannah", snug, attendees=[ids["ben"], ids["kieran"]]))
+    assert load_csv(*(line for line in PEOPLE if not line.startswith("ben@"))) == 0
+
+    act("hannah")
+    form = client.get(book_again_url(client.get(f"/bookings/{first}")))
+    assert chosen(ids["kieran"]) in form.text
+    assert chosen(ids["ben"]) not in form.text and "Ben Adeyemi" not in form.text
+
+
+def test_normal_booking_form_has_no_pickers(client, act, room):
+    snug = room("Snug")
+    act("hannah")
+    form = client.get(
+        "/bookings/new", params={"room": snug, "date": uk_day(1), "start": "10:00", "length": "30"}
+    )
+    assert form.status_code == 200
+    assert ANNOUNCE.search(form.text)[1] == ""
+    assert PICKERS not in form.text and "Check time" not in form.text
+    assert hidden("date", uk_day(1)) in form.text

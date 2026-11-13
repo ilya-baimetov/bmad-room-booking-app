@@ -139,15 +139,25 @@ def _form_page(
     q: str = "",
     error: str | None = None,
     status_code: int = 200,
+    refused: str | None = None,
 ) -> Response:
+    """`error` is announced alongside any slot problem the form finds; `refused` (a taken
+    slot or closed room from POST) only when the form's own check no longer finds one."""
     room, office_name = service.room_to_book(session, room_id)
     attendees, found = service.attendee_choices(session, person, attendee_ids, q)
+    slot_text = None
+    problem = None
     try:
-        slot_text = _slot_text(*_slot(date, start, length))
+        start_at, minutes = _slot(date, start, length)
+        slot_text = _slot_text(start_at, minutes)
+        # A taken slot or closed room on GET stays 200: htmx swaps only 2xx (attendee search).
+        problem = service.slot_problem(session, room.id, start_at, minutes)
     except InvalidBooking as exc:
-        slot_text = None
-        error = error or exc.message
+        problem = exc.message
         status_code = status_code if status_code != 200 else exc.status_code
+    if problem is not None:
+        error = problem if not error or error == problem else f"{error} {problem}"
+    error = error or refused
     return _render(
         request,
         "bookings/new.html",
@@ -162,6 +172,9 @@ def _form_page(
         q=q.strip(),
         found=found,
         error=error,
+        pick_time=problem is not None,
+        start_options=START_OPTIONS,
+        length_options=LENGTH_OPTIONS,
     )
 
 
@@ -212,6 +225,7 @@ def book(
         start_at, minutes = _slot(date, start, length)
         booking = service.book(session, person, room_id, start_at, minutes, title, ids)
     except (InvalidBooking, BookingConflict, RoomClosed) as exc:
+        slot_refusal = isinstance(exc, (BookingConflict, RoomClosed))
         return _form_page(
             request,
             session,
@@ -222,8 +236,9 @@ def book(
             length,
             title,
             ids,
-            error=exc.message,
+            error=None if slot_refusal else exc.message,
             status_code=exc.status_code,
+            refused=exc.message if slot_refusal else None,
         )
     return RedirectResponse(f"/bookings/{booking.id}?notice=booked", status_code=303)
 
@@ -248,6 +263,25 @@ def booking_details(
         notice=text,
         has_ended=has_ended,
         confirming=False,
+        book_again_query=_book_again_query(booking) if booking.organiser_id == person.id else None,
+    )
+
+
+def _book_again_query(booking: service.BookingView) -> str:
+    """The booking form's query for the same room, UK clock time, length, title and
+    attendees, on the UK date one week later."""
+    day, start = uk.utc_to_uk(booking.start_at)
+    minutes = int((booking.end_at - booking.start_at).total_seconds() // 60)
+    return urlencode(
+        {
+            "room": booking.room.id,
+            "date": (day + timedelta(days=7)).isoformat(),
+            "start": start,
+            "length": minutes,
+            "title": booking.title,
+            "attendee_id": list(booking.attendee_ids),
+        },
+        doseq=True,
     )
 
 
@@ -265,6 +299,7 @@ def confirm_cancel(
         notice=None,
         has_ended=False,
         confirming=True,
+        book_again_query=None,
     )
 
 

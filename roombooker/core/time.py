@@ -58,6 +58,12 @@ def uk_to_utc(day: date, clock: time) -> datetime | None:
     return moment
 
 
+def utc_to_uk(moment: datetime) -> tuple[date, str]:
+    """The UK date and `HH:MM` clock time of a UTC moment; the inverse of `uk_to_utc`."""
+    local = moment.astimezone(UK)
+    return local.date(), local.strftime("%H:%M")
+
+
 def uk_midnight(day: date) -> datetime:
     """The UTC moment a UK day starts. UK clocks change at 01:00 or 02:00, so midnight
     always exists and happens once."""

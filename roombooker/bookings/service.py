@@ -62,7 +62,8 @@ class BookingNotFound(DomainError):
 
 @dataclass(frozen=True)
 class BookingView:
-    """A booking as one viewer may see it. `attendees` is empty unless AD-8 allows."""
+    """A booking as one viewer may see it. `attendees` (names, sorted) and `attendee_ids`
+    are empty unless AD-8 allows."""
 
     id: int
     room: Room
@@ -75,6 +76,7 @@ class BookingView:
     attendees_visible: bool
     attendees: tuple[str, ...]
     can_cancel: bool
+    attendee_ids: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -173,6 +175,11 @@ def _views(session: Session, viewer: Person, rows: list[Row]) -> list[BookingVie
                     else ()
                 ),
                 can_cancel=can_cancel_booking(viewer, row.organiser_id),
+                attendee_ids=(
+                    tuple(sorted(attendees[row.id], key=lambda i: (names[i].casefold(), i)))
+                    if visible
+                    else ()
+                ),
             )
         )
     return views
@@ -204,6 +211,32 @@ def bookings_for_person(
     return _views(session, viewer, list(rows))
 
 
+def _closed_message(room: Room) -> str:
+    return f"{room.name} is closed. Pick another room."
+
+
+def _taken_message(room: Room, choice: str = "another room or time") -> str:
+    return f"Someone has already booked {room.name} at that time. Pick {choice}."
+
+
+def slot_problem(
+    session: Session, room_id: int, start_at: datetime, length_minutes: int
+) -> str | None:
+    """Why the room can't be booked for the slot right now, or None if it can.
+
+    Raises InvalidBooking when the slot itself breaks a rule (`check_slot`); returns the
+    closed-room or taken-slot message otherwise. Advisory only, for the booking form:
+    `book` and the triggers stay the guarantee. Writes nothing."""
+    room = rooms_service.find_room(session, room_id)
+    if room.is_closed:
+        return _closed_message(room)
+    end_at = check_slot(start_at, length_minutes)
+    rows = store.overlapping(session, clock.to_text(start_at), clock.to_text(end_at))
+    if any(row.room_id == room.id for row in rows):
+        return _taken_message(room, "another time")  # the form shows the time pickers
+    return None
+
+
 def room_to_book(session: Session, room_id: int) -> tuple[Room, str]:
     """The room and its office's name, for the booking form; RoomNotFound if none."""
     room = rooms_service.find_room(session, room_id)
@@ -213,11 +246,13 @@ def room_to_book(session: Session, room_id: int) -> tuple[Room, str]:
 def attendee_choices(
     session: Session, organiser: Person, chosen_ids: list[int], text: str
 ) -> tuple[list[tuple[int, str]], list[Person]]:
-    """The chosen attendees as (id, name), dropping repeats, the organiser and unknown ids,
-    and the active people matching `text` who could still be added."""
+    """The chosen attendees as (id, name), dropping repeats, the organiser and unknown or
+    inactive ids, and the active people matching `text` who could still be added."""
     chosen = [i for i in dict.fromkeys(chosen_ids) if i != organiser.id]
     names = people_service.names(session, chosen)
-    chosen = [i for i in chosen if i in names]
+    chosen = [
+        i for i in chosen if i in names and people_service.get_active_person(session, i)
+    ]
     found = [
         p
         for p in people_service.search_active_people(session, text)
@@ -290,12 +325,9 @@ def book(
             "bookings: person_id=%d refused book room_id=%d (%s)", actor.id, room.id, reason
         )
         if "room_closed" in reason:
-            raise RoomClosed(f"{room.name} is closed. Pick another room.") from None
+            raise RoomClosed(_closed_message(room)) from None
         if "booking_conflict" in reason:
-            raise BookingConflict(
-                f"Someone has already booked {room.name} at that time. "
-                "Pick another room or time."
-            ) from None
+            raise BookingConflict(_taken_message(room)) from None
         raise
     log.info("bookings: person_id=%d book booking_id=%d room_id=%d", actor.id, booking_id, room.id)
     return get_booking(session, actor, booking_id)
