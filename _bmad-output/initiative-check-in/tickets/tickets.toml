@@ -1,0 +1,8 @@
+# The check-in initiative's epics. Table order is build order. `id` is permanent, never reused.
+
+[[epic]]
+id = 1
+slug = "epic-check-in-or-lose-the-room"
+title = "Check in at the door or lose the room"
+description = "In production, an office manager sets up, replaces or removes a room's door tablet; the tablet shows that room's bookings for today and checks one in with one tap inside its window; a booking whose window a tablet covered in full, opened after freeing went live, and that nobody checked into by 15 minutes after its start, is freed and anyone can book the rest of its slot; organisers and attendees see the check-in window, \"Checked in\" and \"Freed: nobody checked in\" on My bookings and details, and a freed booking as cancelled in their subscribed calendars, with no Cancel; office managers see this week's freed count for their office on Manage rooms."
+covers = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"]

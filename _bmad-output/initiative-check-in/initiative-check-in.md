@@ -3,8 +3,8 @@ tracker_id: ""
 type: initiative
 title: "Booked rooms nobody turns up to are freed for others"
 parent: none
-sources: [_bmad-output/initiative-check-in/sources/request-2026-11-13.md, _bmad-output/research-booking-lifecycle-and-end/research-booking-lifecycle-and-end.md]
-companions: []
+sources: [_bmad-output/initiative-check-in/sources/request-2026-11-13.md, _bmad-output/research-booking-lifecycle-and-end/research-booking-lifecycle-and-end.md, _bmad-output/initiative-check-in/ux-door-screen/EXPERIENCE.md, _bmad-output/initiative-check-in/architecture-check-in/architecture-check-in.md]
+companions: [_bmad-output/initiative-check-in/ux-door-screen/DESIGN.md, _bmad-output/initiative-check-in/ux-door-screen/EXPERIENCE.md, _bmad-output/initiative-check-in/architecture-check-in/architecture-check-in.md]
 after: []
 risk: high
 ---
@@ -21,13 +21,14 @@ Rooms that were booked and then abandoned go back to people who need them. The s
 
 ## Requirements
 
-- R1 (S4, S9): An office manager sets up a tablet once for one room in their office; from then on the tablet shows that room's page with no further sign-in.
+- R1 (S4, S9; AD-8): An office manager sets up a tablet once for one room in their office, and can remove it; a room has at most one tablet, so setting up a new one replaces the old. From setup until removal the tablet shows that room's page with no further sign-in.
 - R2 (S4): The room's tablet page shows that room's bookings for today (UK day), and which one is current or next.
 - R3 (S5, S11): Anyone at the tablet checks in a booking with one tap, without saying who they are, from 5 minutes before its start until 15 minutes after; outside that window the tablet offers no check-in for it.
 - R4 (S3, S6): A booking with no check-in by 15 minutes after its start is freed: the rest of its slot, from 15 minutes after its start to its end, can be booked by anyone like any free time.
-- R5 (S6, S12): A freed booking shows as "Freed: nobody checked in" on its organiser's My bookings and on its details page, and as cancelled in their subscribed calendar; it is distinct from a booking that was cancelled or simply ended.
+- R5 (S6, S12; UX State Patterns, AD-12): A freed booking shows as "Freed: nobody checked in" on My bookings and its details page, to its organiser and its attendees alike, and as cancelled in their subscribed calendars; it is distinct from a booking that was cancelled or simply ended. A freed booking cannot be cancelled; Book again still works.
 - R6 (S7, S14): An office manager sees, beside their office's rooms on Manage rooms, how many bookings in their office were freed from Monday to today, UK time.
-- R7 (S13): A booking in a room whose tablet has not been set up is never freed.
+- R7 (S13; AD-6): A booking is freed only if its check-in window, from 5 minutes before its start to 15 minutes after, opens after freeing went live and its room had a tablet set up for the whole of that window; any other booking is never freed, so setting up a tablet, or freeing going live, frees no past or in-window booking.
+- R8 (UX Component Patterns, State Patterns): A booking in a room with a tablet shows, to its organiser and attendees on My bookings and its details page, its check-in window ("Check in at the door, 09:55–10:15") until checked in, freed or the window closes, and "Checked in" once checked in; bookings in rooms with no tablet show what they show today.
 
 ## Constraints
 
@@ -40,9 +41,9 @@ Rooms that were booked and then abandoned go back to people who need them. The s
 
 ## Done when
 
-- A tablet set up by an office manager shows its room's bookings for today and checks one in within the window, and only within it.
-- A booking nobody checks into is freed 15 minutes after its start, and someone else can then book the rest of its slot; a checked-in booking, or one in a room with no tablet set up, is never freed.
-- The organiser sees a freed booking as freed on My bookings, its details page and their subscribed calendar.
+- A tablet set up by an office manager shows its room's bookings for today and checks one in within the window, and only within it; organisers and attendees see the window and "Checked in" on My bookings and details.
+- A booking nobody checks into is freed 15 minutes after its start, and someone else can then book the rest of its slot; a checked-in booking, or one whose window no tablet covered in full or that opened before freeing went live, is never freed.
+- The organiser and attendees see a freed booking as freed on My bookings, its details page and their subscribed calendars, and cannot cancel it.
 - An office manager sees this week's freed count for their office on Manage rooms.
 - Live in production for all three offices.
 
@@ -52,10 +53,11 @@ Rooms that were booked and then abandoned go back to people who need them. The s
 - Out: booking a room from the tablet; the tablet only shows today's bookings and checks them in.
 - Out: knowing who checked in; check-in is anonymous (S11).
 - Out: a numeric target for freed bookings this release (S15).
-- Touch point: rooms — which rooms have a tablet set up, and the freed count on Manage rooms.
-- Touch point: bookings — check-in, freeing, and what freed means for overlap and listings.
-- Touch point: calendar — My bookings and the subscribed feed show freed bookings.
-- Must not change: how a booking is made, cancelled, or removed by closing its room; the overlap guarantee; rooms with no tablet behave exactly as today.
+- Touch point: rooms — door tablets and their coverage, and the freed count on Manage rooms; owner: epic-check-in-or-lose-the-room.
+- Touch point: bookings — the door page, check-in, freeing, and what freed means for overlap and listings; owner: epic-check-in-or-lose-the-room.
+- Touch point: calendar — My bookings and the subscribed feed show check-in states and freed bookings; owner: epic-check-in-or-lose-the-room.
+- Touch point: core — the CurrentTablet dependency and the new refusal messages; owner: epic-check-in-or-lose-the-room.
+- Must not change: how a booking is made, how a booking that has not been freed is cancelled, or how one is removed by closing its room; the overlap guarantee; rooms with no tablet behave exactly as today.
 - Tracer path: an office manager sets up a room's tablet; a booking in that room passes 15 minutes after its start with no check-in; it is freed; someone else books the rest of the slot; the organiser sees it as freed; the manager's weekly count shows it.
 
 ## References
@@ -64,9 +66,19 @@ Rooms that were booked and then abandoned go back to people who need them. The s
 - research — _bmad-output/research-booking-lifecycle-and-end/research-booking-lifecycle-and-end.md, §1 (how bookings end), §2 (what reads end time), §3 (triggers), §5 (time in tests)
 - decision — docs/decisions/adr-closing-a-room-deletes-its-future-bookings.md
 - code — roombooker/core/identity.py (identity is only the Pick your name cookie)
+- companion — ux-door-screen/DESIGN.md: how the door screen, the state tags and a freed booking look
+- companion — ux-door-screen/EXPERIENCE.md: door-screen states, wording, flows, and the My bookings and details states
+- companion — architecture-check-in/architecture-check-in.md: AD-1–AD-12, the decisions every epic builds within
 
 ## Notes
 
 - Assumption: Anyone can check in a booking they are not part of, so a passer-by can keep a booking from being freed; accepted for this release (S11).
 - Decision: (2026-11-13) Requirements written with Sofia directly, no PRD (the user's call).
 - Decision: (2026-11-13) No numeric success target this release (S15).
+- Decision: (2026-11-13) UX Flow 2's 14:20 rebooking is ignored; R4 governs, so the earliest rebooking is the next quarter-hour start not in the past (14:30 there).
+- Decision: (2026-11-13) EXPERIENCE.md's tag wording "Check in at the door, 09:55–10:15" governs over DESIGN.md's "by 10:15".
+- Decision: (2026-11-13) One epic for now, epic-check-in-or-lose-the-room, covering R1–R8 (the user's call). Sofia proposed three: tablets and check-in, freeing, the weekly count; declined for now, so the epic may be split when its stories are planned.
+- Decision: (2026-11-13) No platform-baseline epic: the app, CI and deployment already exist and are unchanged.
+- Decision: (2026-11-13) Freeing applies only to bookings whose window opens after freeing goes live (R7), so tablets set up before then free no past bookings; the epic records when freeing went live.
+- Decision: (2026-11-13) Tablets and check-in may reach production before freeing; until freeing is live no screen says a booking will be freed (no door countdown, no "or the room is freed").
+- Decision: (2026-11-13) Schema: the first migration adds room_tablets and both checked_in_at and freed_at with AD-3's CHECK; a later one replaces the overlap triggers and creates the freed_bookings view (AD-4, AD-11).
